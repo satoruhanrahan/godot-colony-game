@@ -1,0 +1,250 @@
+[gd_resource type="Theme" load_steps=18 format=3]
+
+[ext_resource type="Texture2D" path="res://ui/panel_frame.png" id="panel_frame"]
+[ext_resource type="Texture2D" path="res://ui/panel_frame_dark.png" id="panel_frame_dark"]
+[ext_resource type="Texture2D" path="res://ui/button_normal.png" id="button_normal"]
+[ext_resource type="Texture2D" path="res://ui/button_hover.png" id="button_hover"]
+[ext_resource type="Texture2D" path="res://ui/button_pressed.png" id="button_pressed"]
+[ext_resource type="Texture2D" path="res://ui/button_disabled.png" id="button_disabled"]
+[ext_resource type="Texture2D" path="res://ui/tab_normal.png" id="tab_normal"]
+[ext_resource type="Texture2D" path="res://ui/tab_active.png" id="tab_active"]
+[ext_resource type="Texture2D" path="res://ui/tab_hover.png" id="tab_hover"]
+[ext_resource type="Texture2D" path="res://ui/slot_frame.png" id="slot_frame"]
+[ext_resource type="Texture2D" path="res://ui/slot_frame_selected.png" id="slot_frame_selected"]
+[ext_resource type="Texture2D" path="res://ui/divider.png" id="divider"]
+[ext_resource type="Texture2D" path="res://ui/title_banner.png" id="title_banner"]
+[ext_resource type="FontFile" path="res://fonts/AlegreyaSans-Regular.ttf" id="font_body"]
+[ext_resource type="FontFile" path="res://fonts/Cinzel-Variable.ttf" id="font_head_base"]
+
+[sub_resource type="FontVariation" id="font_heading"]
+base_font = ExtResource("font_head_base")
+variation_opentype = {2003265652: 600}
+
+[sub_resource type="StyleBoxTexture" id="sb_panel_frame"]
+texture = ExtResource("panel_frame")
+texture_margin_left = 14
+texture_margin_top = 14
+texture_margin_right = 14
+texture_margin_bottom = 14
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 14
+content_margin_top = 14
+content_margin_right = 14
+content_margin_bottom = 14
+
+[sub_resource type="StyleBoxTexture" id="sb_panel_frame_dark"]
+texture = ExtResource("panel_frame_dark")
+texture_margin_left = 14
+texture_margin_top = 14
+texture_margin_right = 14
+texture_margin_bottom = 14
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 14
+content_margin_top = 14
+content_margin_right = 14
+content_margin_bottom = 14
+
+[sub_resource type="StyleBoxTexture" id="sb_button_normal"]
+texture = ExtResource("button_normal")
+texture_margin_left = 8
+texture_margin_top = 8
+texture_margin_right = 8
+texture_margin_bottom = 8
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 10
+content_margin_top = 6
+content_margin_right = 10
+content_margin_bottom = 6
+
+[sub_resource type="StyleBoxTexture" id="sb_button_hover"]
+texture = ExtResource("button_hover")
+texture_margin_left = 8
+texture_margin_top = 8
+texture_margin_right = 8
+texture_margin_bottom = 8
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 10
+content_margin_top = 6
+content_margin_right = 10
+content_margin_bottom = 6
+
+[sub_resource type="StyleBoxTexture" id="sb_button_pressed"]
+texture = ExtResource("button_pressed")
+texture_margin_left = 8
+texture_margin_top = 8
+texture_margin_right = 8
+texture_margin_bottom = 8
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 10
+content_margin_top = 8
+content_margin_right = 10
+content_margin_bottom = 4
+
+[sub_resource type="StyleBoxTexture" id="sb_button_disabled"]
+texture = ExtResource("button_disabled")
+texture_margin_left = 8
+texture_margin_top = 8
+texture_margin_right = 8
+texture_margin_bottom = 8
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 10
+content_margin_top = 6
+content_margin_right = 10
+content_margin_bottom = 6
+
+[sub_resource type="StyleBoxTexture" id="sb_tab_normal"]
+texture = ExtResource("tab_normal")
+texture_margin_left = 10
+texture_margin_top = 8
+texture_margin_right = 10
+texture_margin_bottom = 4
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 10
+content_margin_top = 6
+content_margin_right = 10
+content_margin_bottom = 4
+
+[sub_resource type="StyleBoxTexture" id="sb_tab_active"]
+texture = ExtResource("tab_active")
+texture_margin_left = 10
+texture_margin_top = 8
+texture_margin_right = 10
+texture_margin_bottom = 4
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 10
+content_margin_top = 6
+content_margin_right = 10
+content_margin_bottom = 4
+
+[sub_resource type="StyleBoxTexture" id="sb_tab_hover"]
+texture = ExtResource("tab_hover")
+texture_margin_left = 10
+texture_margin_top = 8
+texture_margin_right = 10
+texture_margin_bottom = 4
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 10
+content_margin_top = 6
+content_margin_right = 10
+content_margin_bottom = 4
+
+[sub_resource type="StyleBoxTexture" id="sb_slot_frame"]
+texture = ExtResource("slot_frame")
+texture_margin_left = 10
+texture_margin_top = 10
+texture_margin_right = 10
+texture_margin_bottom = 10
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 6
+content_margin_top = 6
+content_margin_right = 6
+content_margin_bottom = 6
+
+[sub_resource type="StyleBoxTexture" id="sb_slot_frame_selected"]
+texture = ExtResource("slot_frame_selected")
+texture_margin_left = 10
+texture_margin_top = 10
+texture_margin_right = 10
+texture_margin_bottom = 10
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 6
+content_margin_top = 6
+content_margin_right = 6
+content_margin_bottom = 6
+
+[sub_resource type="StyleBoxTexture" id="sb_divider"]
+texture = ExtResource("divider")
+texture_margin_left = 24
+texture_margin_top = 0
+texture_margin_right = 24
+texture_margin_bottom = 0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+[sub_resource type="StyleBoxTexture" id="sb_title_banner"]
+texture = ExtResource("title_banner")
+texture_margin_left = 20
+texture_margin_top = 14
+texture_margin_right = 20
+texture_margin_bottom = 14
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+content_margin_left = 22
+content_margin_top = 8
+content_margin_right = 22
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxEmpty" id="sb_empty"]
+
+[resource]
+default_font = ExtResource("font_body")
+default_font_size = 17
+Label/colors/font_color = Color(0.953, 0.906, 0.765, 1)
+Label/colors/font_outline_color = Color(0.17, 0.12, 0.09, 1)
+Label/constants/outline_size = 3
+Label/font_sizes/font_size = 17
+InkLabel/base_type = &"Label"
+InkLabel/colors/font_color = Color(0.169, 0.129, 0.094, 1)
+InkLabel/constants/outline_size = 0
+DimLabel/base_type = &"Label"
+DimLabel/colors/font_color = Color(0.541, 0.498, 0.416, 1)
+DangerLabel/base_type = &"Label"
+DangerLabel/colors/font_color = Color(0.89, 0.42, 0.34, 1)
+BrassLabel/base_type = &"Label"
+BrassLabel/colors/font_color = Color(0.82, 0.69, 0.35, 1)
+HeadingLabel/base_type = &"Label"
+HeadingLabel/colors/font_color = Color(0.953, 0.906, 0.765, 1)
+HeadingLabel/fonts/font = SubResource("font_heading")
+HeadingLabel/font_sizes/font_size = 24
+InkHeadingLabel/base_type = &"Label"
+InkHeadingLabel/colors/font_color = Color(0.169, 0.129, 0.094, 1)
+InkHeadingLabel/constants/outline_size = 0
+InkHeadingLabel/fonts/font = SubResource("font_heading")
+InkHeadingLabel/font_sizes/font_size = 24
+Panel/styles/panel = SubResource("sb_panel_frame")
+PanelContainer/styles/panel = SubResource("sb_panel_frame")
+DarkPanel/base_type = &"PanelContainer"
+DarkPanel/styles/panel = SubResource("sb_panel_frame_dark")
+ParchmentPanel/base_type = &"PanelContainer"
+ParchmentPanel/styles/panel = SubResource("sb_panel_frame")
+SlotPanel/base_type = &"PanelContainer"
+SlotPanel/styles/panel = SubResource("sb_slot_frame")
+SlotPanelSelected/base_type = &"PanelContainer"
+SlotPanelSelected/styles/panel = SubResource("sb_slot_frame_selected")
+Banner/base_type = &"PanelContainer"
+Banner/styles/panel = SubResource("sb_title_banner")
+Button/styles/normal = SubResource("sb_button_normal")
+Button/styles/hover = SubResource("sb_button_hover")
+Button/styles/pressed = SubResource("sb_button_pressed")
+Button/styles/disabled = SubResource("sb_button_disabled")
+Button/styles/hover_pressed = SubResource("sb_button_pressed")
+Button/styles/focus = SubResource("sb_empty")
+Button/colors/font_color = Color(0.953, 0.906, 0.765, 1)
+Button/colors/font_hover_color = Color(1, 0.945, 0.78, 1)
+Button/colors/font_pressed_color = Color(0.82, 0.69, 0.35, 1)
+Button/colors/font_hover_pressed_color = Color(0.82, 0.69, 0.35, 1)
+Button/colors/font_disabled_color = Color(0.541, 0.498, 0.416, 1)
+Button/colors/font_outline_color = Color(0.17, 0.12, 0.09, 1)
+Button/constants/outline_size = 3
+TabButton/base_type = &"Button"
+TabButton/styles/normal = SubResource("sb_tab_normal")
+TabButton/styles/hover = SubResource("sb_tab_hover")
+TabButton/styles/pressed = SubResource("sb_tab_active")
+TabButton/styles/hover_pressed = SubResource("sb_tab_active")
+TabButton/styles/disabled = SubResource("sb_tab_normal")
+TabButton/colors/font_pressed_color = Color(0.169, 0.129, 0.094, 1)
+TabButton/colors/font_hover_pressed_color = Color(0.169, 0.129, 0.094, 1)
+TabButton/constants/outline_size = 0
+HSeparator/styles/separator = SubResource("sb_divider")
+HSeparator/constants/separation = 12

@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/pit_saw.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://deavwra3y7lxw" path="res://sprites/sawpit.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://b0i1nbv1nu1u2" path="res://sprites/tree_trunk.png" id="3"]
+[ext_resource type="SpriteFrames" path="res://sprites/sawpit_in_use_frames.tres" id="4"]
+[ext_resource type="Texture2D" uid="uid://b287l1ssuolrv" path="res://sprites/marked_ground.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://bjjdxftx41uoa" path="res://sprites/half_dug_hole.png" id="6"]
+
+[sub_resource type="RectangleShape2D" id="Shape_base"]
+size = Vector2(22, 8)
+
+[node name="PitSaw" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Marked" type="Sprite2D" parent="."]
+z_index = -1
+texture_filter = 1
+texture = ExtResource("5")
+offset = Vector2(-3, -12)
+
+[node name="HalfDug" type="Sprite2D" parent="."]
+visible = false
+z_index = -1
+texture_filter = 1
+texture = ExtResource("6")
+offset = Vector2(-4, -12)
+
+[node name="Static" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2")
+offset = Vector2(0, -12)
+
+[node name="LoadedLog" type="Sprite2D" parent="."]
+visible = false
+texture_filter = 1
+position = Vector2(-7, -7)
+rotation = -1.5707964
+texture = ExtResource("3")
+
+[node name="InUse" type="AnimatedSprite2D" parent="."]
+visible = false
+texture_filter = 1
+sprite_frames = ExtResource("4")
+animation = &"sawing"
+offset = Vector2(0, -12)
+
+[node name="Collision" type="StaticBody2D" parent="."]
+
+[node name="Shape" type="CollisionShape2D" parent="Collision"]
+position = Vector2(0, -4)
+shape = SubResource("Shape_base")

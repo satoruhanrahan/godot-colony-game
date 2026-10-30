@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/table.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/table.png" id="2"]
+
+[sub_resource type="RectangleShape2D" id="Shape_table"]
+size = Vector2(14, 5)
+
+[node name="Table" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2")
+offset = Vector2(0, 1)
+
+[node name="Collision" type="StaticBody2D" parent="."]
+
+[node name="Shape" type="CollisionShape2D" parent="Collision"]
+position = Vector2(0, -2)
+shape = SubResource("Shape_table")

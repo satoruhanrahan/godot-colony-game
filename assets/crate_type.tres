@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BuildingType" format=3]
+
+[ext_resource type="Script" path="res://scripts/building_type.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/closed_crate.png" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Crate.tscn" id="3"]
+
+[resource]
+script = ExtResource("1")
+type_name = "Crate"
+category = "Storage"
+description = "Keeps berries, seeds, flour and bread. Goes inside a house or a storage."
+unlock_requirement = "pit_saw_built"
+texture = ExtResource("2")
+sprite_offset = Vector2(0, -10)
+BUILD_HITS = 4
+built_scene = ExtResource("3")
+cost_label = "2 planks"
+plank_cost = 2
+build_time = 4.0
+capacity = 0
+door_offset = Vector2(0, 4)
+footprint = Vector2i(1, 1)
+indoor_only = true
+locked_hint = "Crates go inside a building."
+indoor_kinds = PackedStringArray("house", "storage")
+indoor_limit_key = "crate"
+base_size = Vector2(22, 8)

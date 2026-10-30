@@ -1,0 +1,136 @@
+[gd_resource type="SpriteFrames" load_steps=18 format=3]
+
+[ext_resource type="Texture2D" uid="uid://boq5dxhe77qer" path="res://sprites/builder_walk.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://cdt18youe28ul" path="res://sprites/builder_hammer.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://g8pfb30mbdms" path="res://sprites/builder_carrying_hammer.png" id="3"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1"]
+atlas = ExtResource("1")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2"]
+atlas = ExtResource("1")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3"]
+atlas = ExtResource("1")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4"]
+atlas = ExtResource("1")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5"]
+atlas = ExtResource("1")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6"]
+atlas = ExtResource("1")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Hammer1"]
+atlas = ExtResource("2")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Hammer2"]
+atlas = ExtResource("2")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Hammer3"]
+atlas = ExtResource("2")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcarry0"]
+atlas = ExtResource("3")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcarry1"]
+atlas = ExtResource("3")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcarry2"]
+atlas = ExtResource("3")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcarry3"]
+atlas = ExtResource("3")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcarry4"]
+atlas = ExtResource("3")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hcarry5"]
+atlas = ExtResource("3")
+region = Rect2(160, 0, 32, 32)
+
+[resource]
+animations = [{
+"name": &"idle",
+"speed": 5.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1")
+}]
+}, {
+"name": &"walk",
+"speed": 7.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6")
+}]
+}, {
+"name": &"hammer",
+"speed": 8.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Hammer1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Hammer2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Hammer3")
+}]
+}, {
+"name": &"carry_hammer",
+"speed": 10.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcarry0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcarry1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcarry2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcarry3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcarry4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hcarry5")
+}]
+}]

@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/grass_patch.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bob3p35q73t14" path="res://sprites/grass_patch.png" id="2"]
+
+[node name="GrassPatch" type="Sprite2D"]
+texture_filter = 1
+texture = ExtResource("2")
+offset = Vector2(-1, -8)
+script = ExtResource("1")

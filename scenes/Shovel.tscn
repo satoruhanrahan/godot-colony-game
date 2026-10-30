@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tool_item.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cgbfavy24rua0" path="res://sprites/shovel.png" id="2"]
+
+[node name="Shovel" type="Sprite2D"]
+texture_filter = 1
+texture = ExtResource("2")
+offset = Vector2(0, -5)
+script = ExtResource("1")
+tool_group = &"shovels"

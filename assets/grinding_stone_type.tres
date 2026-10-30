@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BuildingType" format=3]
+
+[ext_resource type="Script" path="res://scripts/building_type.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/grinding_stone.png" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/GrindingStone.tscn" id="3"]
+
+[resource]
+script = ExtResource("1")
+type_name = "Grinding Stone"
+category = "Food and Water"
+description = "A stone to grind wheat sheaves into flour by hand: put a sheaf on it and press."
+unlock_requirement = "none"
+texture = ExtResource("2")
+sprite_offset = Vector2(1, -6)
+cost_type = "items"
+BUILD_HITS = 3
+built_scene = ExtResource("3")
+cost_label = "2 flat stones"
+plank_cost = 0
+build_time = 4.0
+capacity = 0
+door_offset = Vector2(0, 4)
+footprint = Vector2i(1, 1)
+base_size = Vector2(10, 6)
+materials = {
+"flat_stone": 2
+}

@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/colonist.gd" id="1"]
+[ext_resource type="SpriteFrames" path="res://sprites/colonist_frames.tres" id="2"]
+
+[node name="Colonist" type="AnimatedSprite2D"]
+texture_filter = 1
+offset = Vector2(0, -8)
+sprite_frames = ExtResource("2")
+animation = &"idle"
+script = ExtResource("1")

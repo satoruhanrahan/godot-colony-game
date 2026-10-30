@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildingType" format=3]
+
+[ext_resource type="Script" path="res://scripts/building_type.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cbjipjgn066ac" path="res://sprites/sawmill.png" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Sawmill.tscn" id="3"]
+
+[resource]
+script = ExtResource("1")
+type_name = "Sawmill"
+category = "Workshop"
+description = "Turns logs into planks faster than the pit saw."
+unlock_requirement = "pit_saw_built"
+texture = ExtResource("2")
+sprite_offset = Vector2(0, -13)
+BUILD_HITS = 12
+built_scene = ExtResource("3")
+plank_cost = 10
+build_time = 14.0
+capacity = 0
+door_offset = Vector2(0, 4)
+footprint = Vector2i(1, 1)

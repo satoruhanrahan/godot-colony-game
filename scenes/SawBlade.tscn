@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/saw_blade.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://co2nom32vqueh" path="res://sprites/saw_blade.png" id="2"]
+
+[node name="SawBlade" type="Sprite2D"]
+texture_filter = 1
+texture = ExtResource("2")
+offset = Vector2(6, -10)
+script = ExtResource("1")

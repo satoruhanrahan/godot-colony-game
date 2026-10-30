@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BuildingType" format=3]
+
+[ext_resource type="Script" path="res://scripts/building_type.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cyr0kkve3iq66" path="res://sprites/Cabin.png" id="2"]
+[ext_resource type="Texture2D" path="res://sprites/cabin_interior.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+type_name = "House"
+category = "Housing"
+description = "A cabin where a colonist lives and sleeps. Beds go inside."
+unlock_requirement = "pit_saw_built"
+texture = ExtResource("2")
+sprite_offset = Vector2(2, -14)
+plank_cost = 8
+build_time = 12.0
+BUILD_HITS = 10
+capacity = 1
+door_offset = Vector2(-4, 4)
+footprint = Vector2i(1, 1)
+interior_kind = "house"
+interior_texture = ExtResource("3")
+interior_size = Vector2i(224, 160)
+crates_max = 1

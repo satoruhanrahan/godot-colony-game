@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/building.gd" id="1"]
+[ext_resource type="Resource" path="res://assets/house_type.tres" id="2"]
+[ext_resource type="Texture2D" uid="uid://cyr0kkve3iq66" path="res://sprites/Cabin.png" id="3"]
+
+[sub_resource type="RectangleShape2D" id="Shape_base"]
+size = Vector2(27, 8)
+
+[node name="Building" type="Sprite2D"]
+texture_filter = 1
+texture = ExtResource("3")
+offset = Vector2(0, -9)
+script = ExtResource("1")
+building_type = ExtResource("2")
+
+[node name="Collision" type="StaticBody2D" parent="."]
+
+[node name="Shape" type="CollisionShape2D" parent="Collision"]
+position = Vector2(0.5, -4)
+shape = SubResource("Shape_base")

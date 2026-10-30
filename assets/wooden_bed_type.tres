@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BuildingType" format=3]
+
+[ext_resource type="Script" path="res://scripts/building_type.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/wooden_bed.png" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/WoodenBed.tscn" id="3"]
+
+[resource]
+script = ExtResource("1")
+type_name = "Wooden Bed"
+category = "Housing"
+description = "A proper bed for the floor of a house. Add grass or hay for comfort."
+unlock_requirement = "pit_saw_built"
+texture = ExtResource("2")
+sprite_offset = Vector2(0, -13)
+BUILD_HITS = 6
+built_scene = ExtResource("3")
+cost_label = "4 planks"
+plank_cost = 4
+build_time = 6.0
+capacity = 0
+door_offset = Vector2(0, 4)
+footprint = Vector2i(1, 1)
+indoor_only = true
+indoor_kinds = PackedStringArray("house")
+flat_decal = true
+indoor_limit_key = "bed"
+locked_hint = "Wooden beds go inside a house."

@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bed.gd" id="1"]
+
+[node name="Bed" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1

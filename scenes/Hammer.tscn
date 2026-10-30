@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tool_item.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://o5wpbmt64bmq" path="res://sprites/hammer.png" id="2"]
+
+[node name="Hammer" type="Sprite2D"]
+texture_filter = 1
+texture = ExtResource("2")
+offset = Vector2(-2, -8)
+script = ExtResource("1")
+tool_group = &"hammers"

@@ -1,0 +1,872 @@
+{
+ "rate": 44100,
+ "generated": {
+  "bake_done_1.wav": {
+   "sha256": "2c26a114e4e2b0b7ab876c641981adec999a7a432a749fe5589ee19d20ef3834",
+   "sound": "bake_done",
+   "variant": 1,
+   "seconds": 0.45
+  },
+  "bake_done_2.wav": {
+   "sha256": "0d63bb6c2d7765b375db1a35aa6e68ad2f4f3788c5e863d68dcd63d742cbbefe",
+   "sound": "bake_done",
+   "variant": 2,
+   "seconds": 0.45
+  },
+  "bake_done_3.wav": {
+   "sha256": "c82f28640443f17e546e8f08b1771b2c1c7a1376af0874084cd84104294b652d",
+   "sound": "bake_done",
+   "variant": 3,
+   "seconds": 0.45
+  },
+  "bed_break_1.wav": {
+   "sha256": "95a26f8165f0dfb328f25844a603e85acf9ab5f5d3596e4fa2983034871cc913",
+   "sound": "bed_break",
+   "variant": 1,
+   "seconds": 0.44
+  },
+  "bed_break_2.wav": {
+   "sha256": "beebe1541598b2fa897cb4e5548d6341c84d8ee0c586789e31b3ec7ba6e78d70",
+   "sound": "bed_break",
+   "variant": 2,
+   "seconds": 0.44
+  },
+  "bed_break_3.wav": {
+   "sha256": "4ffb4d81ede516d2b2913eb6231428c186d19526f33e618f48824598cb43fb3d",
+   "sound": "bed_break",
+   "variant": 3,
+   "seconds": 0.44
+  },
+  "bed_make_1.wav": {
+   "sha256": "607740f0be77a75ce091d80446aff91ae5397193f92ef0f443539ef658f3e615",
+   "sound": "bed_make",
+   "variant": 1,
+   "seconds": 0.42
+  },
+  "bed_make_2.wav": {
+   "sha256": "de3a95dc15517baffd7703ef90f8be220446dad8f90057dc6fa521ba14d33d07",
+   "sound": "bed_make",
+   "variant": 2,
+   "seconds": 0.42
+  },
+  "bed_make_3.wav": {
+   "sha256": "77f7edcaa54eff03c7a65e58f58af6233629bd3840596e61cf1f97b18fb9b779",
+   "sound": "bed_make",
+   "variant": 3,
+   "seconds": 0.42
+  },
+  "blueprint_place_1.wav": {
+   "sha256": "15978142f79ccf926b9fe5b6f426efd9bc200a5e90d050d74350a9370f631d50",
+   "sound": "blueprint_place",
+   "variant": 1,
+   "seconds": 0.22
+  },
+  "blueprint_place_2.wav": {
+   "sha256": "bbc5714944ea66eb852f3ce747b4e19ea8c13ce3be1a19b3b9873244d4c9e7cf",
+   "sound": "blueprint_place",
+   "variant": 2,
+   "seconds": 0.22
+  },
+  "blueprint_place_3.wav": {
+   "sha256": "87331a8a9a483bc5d5d4fcb9f8d9ac9081629f596684ae5249b6c1cc3ff2e145",
+   "sound": "blueprint_place",
+   "variant": 3,
+   "seconds": 0.22
+  },
+  "board_set_1.wav": {
+   "sha256": "e144c24eea19df41611beb3dd8cdab4f88514f03d585e6fb299cb8aeb9c9bba6",
+   "sound": "board_set",
+   "variant": 1,
+   "seconds": 0.161
+  },
+  "board_set_2.wav": {
+   "sha256": "ed4d9e88aa81ba13e1998432655bd602ba8b074e1baf65d0af52d011d202b3d7",
+   "sound": "board_set",
+   "variant": 2,
+   "seconds": 0.156
+  },
+  "board_set_3.wav": {
+   "sha256": "1e42677a66252db0e22b4cac43caff94ce1ae492ec54eafbd2606c841e458503",
+   "sound": "board_set",
+   "variant": 3,
+   "seconds": 0.166
+  },
+  "build_complete_1.wav": {
+   "sha256": "c071ae04694d94ef2fc6383b111e75a6acdbca6606afcad74eb2010782211cf4",
+   "sound": "build_complete",
+   "variant": 1,
+   "seconds": 0.5
+  },
+  "build_complete_2.wav": {
+   "sha256": "35943eddce0a288023a3630b153632b4d8c22aca051d340a43391094a8c24d3f",
+   "sound": "build_complete",
+   "variant": 2,
+   "seconds": 0.5
+  },
+  "build_complete_3.wav": {
+   "sha256": "21f909cb382fe3050ef15150d68d2cb5a7f5c7f6c1f7cece8cb7f7acec455505",
+   "sound": "build_complete",
+   "variant": 3,
+   "seconds": 0.5
+  },
+  "chop_hit_1.wav": {
+   "sha256": "1d2d4b9bf0ea493862da83f75d3ae17537d017fbdba44a28b124680b0ae0339c",
+   "sound": "chop_hit",
+   "variant": 1,
+   "seconds": 0.4
+  },
+  "chop_hit_2.wav": {
+   "sha256": "91b7aad194b58de0882808a79e5745b7b1e368993414f80e936aa0b63efb53f7",
+   "sound": "chop_hit",
+   "variant": 2,
+   "seconds": 0.4
+  },
+  "chop_hit_3.wav": {
+   "sha256": "358f8075cf6aa8800ee2082c37121614498efca0bfdf69212d58ea6e012a59e8",
+   "sound": "chop_hit",
+   "variant": 3,
+   "seconds": 0.4
+  },
+  "crate_close_1.wav": {
+   "sha256": "8f589b67eb66519934c0f74dacbe4c402d58304292d6117f4ee6d1667f6a07b2",
+   "sound": "crate_close",
+   "variant": 1,
+   "seconds": 0.36
+  },
+  "crate_close_2.wav": {
+   "sha256": "7b48fde664e310a98a47b811ed7584195e88f96fbf56b37950ce0d4a3b6190a2",
+   "sound": "crate_close",
+   "variant": 2,
+   "seconds": 0.36
+  },
+  "crate_close_3.wav": {
+   "sha256": "1d4860727e49cad6ad11f1e2cc6d396b7206ee422da86a1f58bfb97040392016",
+   "sound": "crate_close",
+   "variant": 3,
+   "seconds": 0.36
+  },
+  "crate_open_1.wav": {
+   "sha256": "e618528fcf50fe8f78fa2a8639f496e446273d23f942b0cdc3b564ac2072888f",
+   "sound": "crate_open",
+   "variant": 1,
+   "seconds": 0.3
+  },
+  "crate_open_2.wav": {
+   "sha256": "6c07822797603294a9c30bf9756e8d54f70b2266a86c402fde091d8b41f410e2",
+   "sound": "crate_open",
+   "variant": 2,
+   "seconds": 0.3
+  },
+  "crate_open_3.wav": {
+   "sha256": "4ba4325fde12430e95c4c81e770eab7d24680a6b208a59646709db2ac15d8a59",
+   "sound": "crate_open",
+   "variant": 3,
+   "seconds": 0.295
+  },
+  "delimb_hit_1.wav": {
+   "sha256": "8cd529eb223f63867bfbbc4a08b1a663a6e13e51af5de63a4a1bbf1ac0845e54",
+   "sound": "delimb_hit",
+   "variant": 1,
+   "seconds": 0.249
+  },
+  "delimb_hit_2.wav": {
+   "sha256": "fe92b16c4b215c2778acbcaf135203c2024c80428ce21c952493c01c0a23b849",
+   "sound": "delimb_hit",
+   "variant": 2,
+   "seconds": 0.22
+  },
+  "delimb_hit_3.wav": {
+   "sha256": "3f2fa9bcbf809b0312b3ec4c70d20f196bea6a14878d5f72bfb39a894cc1ca5f",
+   "sound": "delimb_hit",
+   "variant": 3,
+   "seconds": 0.204
+  },
+  "dig_hit_1.wav": {
+   "sha256": "6d69f4311ba8b172189c55658846a3719dd2b0fb4a22d6b040db07a9556db33f",
+   "sound": "dig_hit",
+   "variant": 1,
+   "seconds": 0.34
+  },
+  "dig_hit_2.wav": {
+   "sha256": "44ce71df577911db38ef4b8f0bf850d606de6012f406d1e496be5506f36aa4e7",
+   "sound": "dig_hit",
+   "variant": 2,
+   "seconds": 0.34
+  },
+  "dig_hit_3.wav": {
+   "sha256": "b5b95e627134eb8887d7a54d014c21d8e29b2efc2d337f2e2539b578a45f9bf9",
+   "sound": "dig_hit",
+   "variant": 3,
+   "seconds": 0.34
+  },
+  "dismantle_hit_1.wav": {
+   "sha256": "ebc5b8d4d179b5c93f4393efc55c8ff0a8a0d8ab77fb1f10c56bb1f701fb67a3",
+   "sound": "dismantle_hit",
+   "variant": 1,
+   "seconds": 0.295
+  },
+  "dismantle_hit_2.wav": {
+   "sha256": "6a2cf5184c1b41393c703fc87e1071956813c77db993d216bdbc3aa76e4ae752",
+   "sound": "dismantle_hit",
+   "variant": 2,
+   "seconds": 0.277
+  },
+  "dismantle_hit_3.wav": {
+   "sha256": "bda179e8cb5c0d2b647b357059d7e2211ab5ba6f1d7955fef8e4d439f219aa90",
+   "sound": "dismantle_hit",
+   "variant": 3,
+   "seconds": 0.304
+  },
+  "door_1.wav": {
+   "sha256": "99683f436d0de839fb9e8dec3d9e675bd7688ebdb8ca7f1ac87f7a5aad5c31c3",
+   "sound": "door",
+   "variant": 1,
+   "seconds": 0.7
+  },
+  "door_2.wav": {
+   "sha256": "c14d6e307c72c833f0458ab27b20e73438c7061ac5b8cfc2a12b68ed9503c960",
+   "sound": "door",
+   "variant": 2,
+   "seconds": 0.7
+  },
+  "door_3.wav": {
+   "sha256": "367c6b4b8c8b9e0ffed73d8a71355fada74b75c6eefae48ea29dea223da80ccf",
+   "sound": "door",
+   "variant": 3,
+   "seconds": 0.7
+  },
+  "drop_1.wav": {
+   "sha256": "a50bbb782d9a9fc60d42d11eee20c259adfbbeb12149d0ac27fa41256a2a216e",
+   "sound": "drop",
+   "variant": 1,
+   "seconds": 0.24
+  },
+  "drop_2.wav": {
+   "sha256": "30db3d6a87ece88f8972ff7d25343d71166e1c444e9100a3f16f30e5cacec82c",
+   "sound": "drop",
+   "variant": 2,
+   "seconds": 0.24
+  },
+  "drop_3.wav": {
+   "sha256": "7ae8e7be287bed32cec0850de2a2ba34c2f5a1f2f474a762e37f2ef10a17865c",
+   "sound": "drop",
+   "variant": 3,
+   "seconds": 0.24
+  },
+  "eat_1.wav": {
+   "sha256": "94b3568e88c2f47e20db98b8fdbabe605e7dc256dbc646590a478206e3edc413",
+   "sound": "eat",
+   "variant": 1,
+   "seconds": 0.225
+  },
+  "eat_2.wav": {
+   "sha256": "ce0ae32b2c025127cf5a48bd10861774900e76ffa5dc2ee2d4cf7510b754c0b0",
+   "sound": "eat",
+   "variant": 2,
+   "seconds": 0.242
+  },
+  "eat_3.wav": {
+   "sha256": "7c488ff723ce3236fbfce3e601681e13c1a86c2b1ee98d5a8461b955a2d4951e",
+   "sound": "eat",
+   "variant": 3,
+   "seconds": 0.211
+  },
+  "eat_bread_1.wav": {
+   "sha256": "ca57d80e7a922e4af8a2df2aced389472cf54c49ccaaad021b1bdd49481c5fb7",
+   "sound": "eat_bread",
+   "variant": 1,
+   "seconds": 0.39
+  },
+  "eat_bread_2.wav": {
+   "sha256": "29abbc8e53c84daf14702dff91cc38efa1548be914e508cdacada64217318533",
+   "sound": "eat_bread",
+   "variant": 2,
+   "seconds": 0.39
+  },
+  "eat_bread_3.wav": {
+   "sha256": "a0a439cdaad970a758de62c1bf474207cc8f488e22fb77a55f5e1a55e9d0af6d",
+   "sound": "eat_bread",
+   "variant": 3,
+   "seconds": 0.39
+  },
+  "grass_pull_1.wav": {
+   "sha256": "cc0ea585140a1a4ef2067eb4dc5316a690bbb57c9482f85eb803c7727b461c56",
+   "sound": "grass_pull",
+   "variant": 1,
+   "seconds": 0.36
+  },
+  "grass_pull_2.wav": {
+   "sha256": "14553a1583e0848901389fb28dfb00f0b16144759b8f01e34dc2aebf4625bc32",
+   "sound": "grass_pull",
+   "variant": 2,
+   "seconds": 0.36
+  },
+  "grass_pull_3.wav": {
+   "sha256": "d5e3ca1267c1576096535c011430f9114fba55ee14592fcad5fe6e770ed91831",
+   "sound": "grass_pull",
+   "variant": 3,
+   "seconds": 0.36
+  },
+  "grind_1.wav": {
+   "sha256": "7c52ae9dd2b1776235d4931ec42efaf556f2b2b0744deb89698bcfef3551e246",
+   "sound": "grind",
+   "variant": 1,
+   "seconds": 0.35
+  },
+  "grind_2.wav": {
+   "sha256": "74a8b9f4eb4f3198217ba9d8a5d2403acf41162042bada7044491e8f6ca3c306",
+   "sound": "grind",
+   "variant": 2,
+   "seconds": 0.349
+  },
+  "grind_3.wav": {
+   "sha256": "c70226530924124a8ac85b1b0e905fa5c95ae844b4ba3431c0991cb0c41f60ef",
+   "sound": "grind",
+   "variant": 3,
+   "seconds": 0.35
+  },
+  "grind_done_1.wav": {
+   "sha256": "ce58dda4590a0a1cb187f90924b015f733ce6a43b0223e3af46c3772ddce69e1",
+   "sound": "grind_done",
+   "variant": 1,
+   "seconds": 0.292
+  },
+  "grind_done_2.wav": {
+   "sha256": "ff9a5e25d50c44d77b1bcceca7b5c722e907f80e660728008c0114998cdd687a",
+   "sound": "grind_done",
+   "variant": 2,
+   "seconds": 0.28
+  },
+  "grind_done_3.wav": {
+   "sha256": "aff95ab03c969ae2339b7c8efb2db773bc3ddb298ed90fa97bbcc2058ffcb964",
+   "sound": "grind_done",
+   "variant": 3,
+   "seconds": 0.288
+  },
+  "hammer_hit_1.wav": {
+   "sha256": "a089b8ce0c3eaedd11a5b9b90ea37450377b7bd65321aa1565ed51c92a4c9385",
+   "sound": "hammer_hit",
+   "variant": 1,
+   "seconds": 0.183
+  },
+  "hammer_hit_2.wav": {
+   "sha256": "67bf49a0d072d856148bbd194eee76b10b42499f494195846608abcd42f92ebf",
+   "sound": "hammer_hit",
+   "variant": 2,
+   "seconds": 0.22
+  },
+  "hammer_hit_3.wav": {
+   "sha256": "c9ad3120c119233c4cd81f37120dfa377006243f69ab2ca3f49a3ff862b87ca8",
+   "sound": "hammer_hit",
+   "variant": 3,
+   "seconds": 0.22
+  },
+  "harvest_1.wav": {
+   "sha256": "c933e576105b057b660c18879430f4faccf0d4c6f3f5df4405c9db67c0b131ae",
+   "sound": "harvest",
+   "variant": 1,
+   "seconds": 0.3
+  },
+  "harvest_2.wav": {
+   "sha256": "ca3a08894d24cf294fc153db4b531194b3e90438955f868eb4733f99dde95563",
+   "sound": "harvest",
+   "variant": 2,
+   "seconds": 0.3
+  },
+  "harvest_3.wav": {
+   "sha256": "aa96df2cf7b1223c73c8a5ea28078b301191ada6e6c4b2eb1c734be2951d8ee2",
+   "sound": "harvest",
+   "variant": 3,
+   "seconds": 0.3
+  },
+  "knead_1.wav": {
+   "sha256": "b6515cb3eeefe3615020d6ba707836a51258f1e7cdf6fa5fdb61de2a56dc32b6",
+   "sound": "knead",
+   "variant": 1,
+   "seconds": 0.32
+  },
+  "knead_2.wav": {
+   "sha256": "225930e7d6a3e245a338ad49c8e7eb729f5138ce424a09f3d1c587450cb46a68",
+   "sound": "knead",
+   "variant": 2,
+   "seconds": 0.32
+  },
+  "knead_3.wav": {
+   "sha256": "d2706b2d5e281f22b96c86c1bde536f7267557dbbbbcd5b94da6a8a794c799ab",
+   "sound": "knead",
+   "variant": 3,
+   "seconds": 0.32
+  },
+  "knead_done_1.wav": {
+   "sha256": "1e7fac28bd5175a909b4964bb5231c62fd5226e0c57955e3cbf91071fae80aa5",
+   "sound": "knead_done",
+   "variant": 1,
+   "seconds": 0.4
+  },
+  "knead_done_2.wav": {
+   "sha256": "71b4cd37159d54e436aea26a975dd968295cab9a9b998822c8c8c06b6a52dcd4",
+   "sound": "knead_done",
+   "variant": 2,
+   "seconds": 0.4
+  },
+  "knead_done_3.wav": {
+   "sha256": "64360fbb0007f1ed7e4c7f64b571b7a1b8a6bfa60fe2f07a0b5e68d10b013740",
+   "sound": "knead_done",
+   "variant": 3,
+   "seconds": 0.4
+  },
+  "pickup_1.wav": {
+   "sha256": "b03cce21918179ee51705892290859cb36bf271ae168b73be63f7f5aadcc5221",
+   "sound": "pickup",
+   "variant": 1,
+   "seconds": 0.18
+  },
+  "pickup_2.wav": {
+   "sha256": "879831aeac413851ffecd15922b5412deee010e88bc51374ad9c535c6801e2b6",
+   "sound": "pickup",
+   "variant": 2,
+   "seconds": 0.18
+  },
+  "pickup_3.wav": {
+   "sha256": "61d349bf9382208a20eae805f5ca63eab9e646040291f5d177252f405363751a",
+   "sound": "pickup",
+   "variant": 3,
+   "seconds": 0.18
+  },
+  "plank_drop_1.wav": {
+   "sha256": "8c9e6cf845876f2cd05e7e6200a6e88df7f97b9cf3e5fc2ba287d7f902273d1e",
+   "sound": "plank_drop",
+   "variant": 1,
+   "seconds": 0.336
+  },
+  "plank_drop_2.wav": {
+   "sha256": "b6915613875f2465ac77c3350a559557a9a0fc1c99fd4443434c062eaf73ac21",
+   "sound": "plank_drop",
+   "variant": 2,
+   "seconds": 0.322
+  },
+  "plank_drop_3.wav": {
+   "sha256": "5fc57738c02b304d1d05d13a61ff9b5dffd0989081835e7dad1b879a7bd531c4",
+   "sound": "plank_drop",
+   "variant": 3,
+   "seconds": 0.338
+  },
+  "pour_1.wav": {
+   "sha256": "400519387ab45844735cd53eab117458525049d934be9b4d58cce781a26b718e",
+   "sound": "pour",
+   "variant": 1,
+   "seconds": 0.55
+  },
+  "pour_2.wav": {
+   "sha256": "ea162befa5c3e41d3d30bf1dbafec8247e7e046895b4d1e262ebf925b6e8b069",
+   "sound": "pour",
+   "variant": 2,
+   "seconds": 0.55
+  },
+  "pour_3.wav": {
+   "sha256": "8af12247e1104bcae2c00c80b324279c32126576f8e262db3eaa546c08160f9d",
+   "sound": "pour",
+   "variant": 3,
+   "seconds": 0.55
+  },
+  "saw_loop_1.wav": {
+   "sha256": "8cacc1fbdc5a9f449e1c2616e99cb2182c0cb979fa87ad7ef2ff9dd0aab9576e",
+   "sound": "saw_loop",
+   "variant": 1,
+   "seconds": 0.5
+  },
+  "saw_loop_2.wav": {
+   "sha256": "5e4f0f509ed6df52eee391875f5660adbb0818f20396ecc2b1d572349b256a9e",
+   "sound": "saw_loop",
+   "variant": 2,
+   "seconds": 0.5
+  },
+  "saw_loop_3.wav": {
+   "sha256": "283f389904426cdc28112f5f2c2e2e7464add81c05cd1b9adaa8c9f8062d4d12",
+   "sound": "saw_loop",
+   "variant": 3,
+   "seconds": 0.5
+  },
+  "scoop_1.wav": {
+   "sha256": "74d29418640d2e0df32738bc5f21f1edee99f54089698149edd9c7879225b4bf",
+   "sound": "scoop",
+   "variant": 1,
+   "seconds": 0.45
+  },
+  "scoop_2.wav": {
+   "sha256": "d5e6fe1bdea01cb467c6eb49d6f5d7a482e12f672b4e3e0408f20b3e36879c16",
+   "sound": "scoop",
+   "variant": 2,
+   "seconds": 0.45
+  },
+  "scoop_3.wav": {
+   "sha256": "59d80055ef01a41b266824032517b9ff3afe6b77bf56d1f7c62f3f343178e99c",
+   "sound": "scoop",
+   "variant": 3,
+   "seconds": 0.45
+  },
+  "sow_1.wav": {
+   "sha256": "ea74eb391c99985e02650c3359d61dc3080cf433efe2423fa2ce9ea0ec9214ed",
+   "sound": "sow",
+   "variant": 1,
+   "seconds": 0.32
+  },
+  "sow_2.wav": {
+   "sha256": "6cb48715084a9ce8cd3d3a5c920e7b19b6948ef46abf72fba12a657fa243557a",
+   "sound": "sow",
+   "variant": 2,
+   "seconds": 0.32
+  },
+  "sow_3.wav": {
+   "sha256": "f4bdd7610a2201e2588e24f7a895c05fe5263327a9731d2ac12c75e8e2a7ca75",
+   "sound": "sow",
+   "variant": 3,
+   "seconds": 0.32
+  },
+  "splash_1.wav": {
+   "sha256": "ad4cffe22f02e87c0d7544b132f8e773e41cba3c72f9278b2e7284651af1f769",
+   "sound": "splash",
+   "variant": 1,
+   "seconds": 0.3
+  },
+  "splash_2.wav": {
+   "sha256": "1a4764f421356274a7cadc7bfad05d0908fe7928f1d72417c155ae5a80eee561",
+   "sound": "splash",
+   "variant": 2,
+   "seconds": 0.3
+  },
+  "splash_3.wav": {
+   "sha256": "95fbdf3af5c7b5d24f6f643b863779d60b29b7ced400c6091e5d9dc28f8d51e1",
+   "sound": "splash",
+   "variant": 3,
+   "seconds": 0.3
+  },
+  "step_dirt_1.wav": {
+   "sha256": "c8bc567e3c2ffca84cf72824c35bd6eb0b3861ecafbe7e8004a21c46c3a61b19",
+   "sound": "step_dirt",
+   "variant": 1,
+   "seconds": 0.16
+  },
+  "step_dirt_2.wav": {
+   "sha256": "ad50873a3ebb676606698bca9fa8acde7fb42111c1c83c4ebc51fe92f91a9f92",
+   "sound": "step_dirt",
+   "variant": 2,
+   "seconds": 0.16
+  },
+  "step_dirt_3.wav": {
+   "sha256": "c3930542e1a5704cb33ebbedd3f4f65a147ac4efe2a627a83c2aff557c9007ca",
+   "sound": "step_dirt",
+   "variant": 3,
+   "seconds": 0.16
+  },
+  "step_grass_1.wav": {
+   "sha256": "82cbd1927ed68325f2595f84366b54bfbde6df54bad0fa330d2ce23f98468d0d",
+   "sound": "step_grass",
+   "variant": 1,
+   "seconds": 0.16
+  },
+  "step_grass_2.wav": {
+   "sha256": "17b6c87a8ac2bf3ccab9062b1d1085d25641c46929c3cf4cc9c568a48fff7f4e",
+   "sound": "step_grass",
+   "variant": 2,
+   "seconds": 0.16
+  },
+  "step_grass_3.wav": {
+   "sha256": "0f1c4dc7f32508a059965751d063465a4b0b9d22bca2a0d738d1d9a110463e37",
+   "sound": "step_grass",
+   "variant": 3,
+   "seconds": 0.16
+  },
+  "step_water_1.wav": {
+   "sha256": "02ec0b13e586ff945550345295f492b438700379c22eacca87acac9a06924157",
+   "sound": "step_water",
+   "variant": 1,
+   "seconds": 0.22
+  },
+  "step_water_2.wav": {
+   "sha256": "3cc862ba9cc4e39666783b87828e1a55bb4a5210ec29515480a98184a7c29e58",
+   "sound": "step_water",
+   "variant": 2,
+   "seconds": 0.22
+  },
+  "step_water_3.wav": {
+   "sha256": "49d1a0e2c9e53e947f0b3d2305e17b024e7380c115c98b88e1e1fcf3ee31a005",
+   "sound": "step_water",
+   "variant": 3,
+   "seconds": 0.22
+  },
+  "step_wood_1.wav": {
+   "sha256": "7047c5c917ccba4758b68d70d55dd933171881bb586716b4f47d4d730d4354a4",
+   "sound": "step_wood",
+   "variant": 1,
+   "seconds": 0.18
+  },
+  "step_wood_2.wav": {
+   "sha256": "f957af2d385250c9ad0f4eaaec47c37c9b27c792c01a0c2aa6d8b83735fef5f7",
+   "sound": "step_wood",
+   "variant": 2,
+   "seconds": 0.18
+  },
+  "step_wood_3.wav": {
+   "sha256": "8a2f439f165bf011372935c6db663a9f6f2f95342d14ffef107a8b15914cd4f4",
+   "sound": "step_wood",
+   "variant": 3,
+   "seconds": 0.18
+  },
+  "stone_place_1.wav": {
+   "sha256": "51dd9329dcfec02282daec22a603297389fd2d5df424ccba083133005a125b7c",
+   "sound": "stone_place",
+   "variant": 1,
+   "seconds": 0.236
+  },
+  "stone_place_2.wav": {
+   "sha256": "b952cd8c2c5c73cb9071f3ba237c543c5ab807df601b58d0800a0f32782eb3ae",
+   "sound": "stone_place",
+   "variant": 2,
+   "seconds": 0.242
+  },
+  "stone_place_3.wav": {
+   "sha256": "093367a0fe5093dd18f740b8c2de5d4b3c2ddb8fd858301d71c0c46460b4d418",
+   "sound": "stone_place",
+   "variant": 3,
+   "seconds": 0.238
+  },
+  "table_set_1.wav": {
+   "sha256": "4d260c91bd12029e0656cd87817bca37e248b00069e495a4f8c5c5227ce15cd3",
+   "sound": "table_set",
+   "variant": 1,
+   "seconds": 0.3
+  },
+  "table_set_2.wav": {
+   "sha256": "85728bff97f4dd447978b1cfdd9f7b46acb7d258ced61b6bf25faf91eaf0984e",
+   "sound": "table_set",
+   "variant": 2,
+   "seconds": 0.3
+  },
+  "table_set_3.wav": {
+   "sha256": "7bd46b4efa95100862dd50a12a087e5ad1ed017fc915ac3040e55be8ae370c0b",
+   "sound": "table_set",
+   "variant": 3,
+   "seconds": 0.3
+  },
+  "thresh_done_1.wav": {
+   "sha256": "967c855453ee6c5584b924f869b72b95d9c4a6cbfe5cab41a851b8abe01cdcb9",
+   "sound": "thresh_done",
+   "variant": 1,
+   "seconds": 0.459
+  },
+  "thresh_done_2.wav": {
+   "sha256": "5c96baa3860f16348aaf7bc8c5d0de85920c2aba9c81ee88be16b864fffd6030",
+   "sound": "thresh_done",
+   "variant": 2,
+   "seconds": 0.447
+  },
+  "thresh_done_3.wav": {
+   "sha256": "d534675bed5a254e48ae01ee4474bcb798538418f7536e620a37f7eed90a3236",
+   "sound": "thresh_done",
+   "variant": 3,
+   "seconds": 0.477
+  },
+  "thresh_rustle_1.wav": {
+   "sha256": "b3a1543bd13319fc05c96fd7509454b985a171fb171fe558f55190fc3b494558",
+   "sound": "thresh_rustle",
+   "variant": 1,
+   "seconds": 0.169
+  },
+  "thresh_rustle_2.wav": {
+   "sha256": "079834df14b587a26a18e0c320c4fe1b416b2501d0e0ff601bb3e2e857b7f5c5",
+   "sound": "thresh_rustle",
+   "variant": 2,
+   "seconds": 0.158
+  },
+  "thresh_rustle_3.wav": {
+   "sha256": "e0bd8aba2fbf72bbae692ddbad8d16a99d18310dbeb20d18dec520704cf43390",
+   "sound": "thresh_rustle",
+   "variant": 3,
+   "seconds": 0.148
+  },
+  "till_1.wav": {
+   "sha256": "f440fe4d267299c8ad505ff3a979aa3ba1a497427bbb28852f107657d7cea130",
+   "sound": "till",
+   "variant": 1,
+   "seconds": 0.32
+  },
+  "till_2.wav": {
+   "sha256": "ddaf3f2276c71db5a9f1a12ee382f943f322de98b995cb58e0a4290c65c9350f",
+   "sound": "till",
+   "variant": 2,
+   "seconds": 0.32
+  },
+  "till_3.wav": {
+   "sha256": "dba2659c56a44b009b17b2fd41988fe473720d771892d733ad66af050e1d8c42",
+   "sound": "till",
+   "variant": 3,
+   "seconds": 0.32
+  },
+  "toolbox_close_1.wav": {
+   "sha256": "9d859fa349d797f1601b6813f8904ef448df474bcd3ee8c4ed113987f932e977",
+   "sound": "toolbox_close",
+   "variant": 1,
+   "seconds": 0.3
+  },
+  "toolbox_close_2.wav": {
+   "sha256": "747ceec565bd80f9d3d84888411d4d12eda90d7bc5490ec552e92ec7e5bcc03a",
+   "sound": "toolbox_close",
+   "variant": 2,
+   "seconds": 0.3
+  },
+  "toolbox_close_3.wav": {
+   "sha256": "54f8fe8989c892b18d96e3fd9053f0985440d2c071449bea890c535d05e7cde8",
+   "sound": "toolbox_close",
+   "variant": 3,
+   "seconds": 0.3
+  },
+  "toolbox_lift_1.wav": {
+   "sha256": "ceb5325dc00a11007b2ea8927024dc73dd76d4371a5f3c26a87f9fae90046f92",
+   "sound": "toolbox_lift",
+   "variant": 1,
+   "seconds": 0.46
+  },
+  "toolbox_lift_2.wav": {
+   "sha256": "4e9f8d87d0dde3824f6256af84ffaceea04c4e252ddbbca2a32b212b86377799",
+   "sound": "toolbox_lift",
+   "variant": 2,
+   "seconds": 0.462
+  },
+  "toolbox_lift_3.wav": {
+   "sha256": "4bab5c582324abe9a1f4f8e26cceea1ff8401ce3f2a0d614b814d5fa79de1a40",
+   "sound": "toolbox_lift",
+   "variant": 3,
+   "seconds": 0.477
+  },
+  "toolbox_open_1.wav": {
+   "sha256": "5087a49692fd6a6ccb68eb51dcb9d0856e8c5bddf8be2201046949fe47aab613",
+   "sound": "toolbox_open",
+   "variant": 1,
+   "seconds": 0.46
+  },
+  "toolbox_open_2.wav": {
+   "sha256": "249ab80e3e3875d00c849aa6e40e0bdb0aef8f5f8de89b3845113cea48e9c83d",
+   "sound": "toolbox_open",
+   "variant": 2,
+   "seconds": 0.46
+  },
+  "toolbox_open_3.wav": {
+   "sha256": "ff0bd1fe87e901ca133bf43496c78548ea74863b8fbd58ed4f6fd73ecb0ddb35",
+   "sound": "toolbox_open",
+   "variant": 3,
+   "seconds": 0.453
+  },
+  "toolbox_set_1.wav": {
+   "sha256": "7ec02e655c979e1218f81c9bd01da68f1ed95ae7076d3c81f2f4c4133b60539c",
+   "sound": "toolbox_set",
+   "variant": 1,
+   "seconds": 0.3
+  },
+  "toolbox_set_2.wav": {
+   "sha256": "eef2d2e51138a3a754c6f0a459ffa488f24128e9d7e726707529ef40387e9e93",
+   "sound": "toolbox_set",
+   "variant": 2,
+   "seconds": 0.3
+  },
+  "toolbox_set_3.wav": {
+   "sha256": "7adbba419f91060ca5051cab27a1860c79fd78e9e5c11dc22cb7b085a66a05e7",
+   "sound": "toolbox_set",
+   "variant": 3,
+   "seconds": 0.3
+  },
+  "ui_click_1.wav": {
+   "sha256": "f6f88bcfbac857d896e1e188cf60aeea7861132be0ca231616dbadd7af1638a5",
+   "sound": "ui_click",
+   "variant": 1,
+   "seconds": 0.114
+  },
+  "ui_click_2.wav": {
+   "sha256": "8b2ab15786ee0d0f8397f9526e9868bff539a97f674c18775bf30dd60126e15e",
+   "sound": "ui_click",
+   "variant": 2,
+   "seconds": 0.12
+  },
+  "ui_click_3.wav": {
+   "sha256": "eb7ac1be753ca0195cb2862805a8dc0b2c447a6115c4e2f405af3a9bbf2e83a6",
+   "sound": "ui_click",
+   "variant": 3,
+   "seconds": 0.12
+  },
+  "ui_close_1.wav": {
+   "sha256": "9a058a351ea1ae8eb9ebcba63602b5b1f6f3c860c20987a3b796cfb604a9a498",
+   "sound": "ui_close",
+   "variant": 1,
+   "seconds": 0.26
+  },
+  "ui_close_2.wav": {
+   "sha256": "317743378d92f1d0e760ea8fc33ba83843fb016c5b6e9e3ebaf8690ebb746d8e",
+   "sound": "ui_close",
+   "variant": 2,
+   "seconds": 0.26
+  },
+  "ui_close_3.wav": {
+   "sha256": "4b39948e4d365770da4fea4359b0164a698be0df13c818951bb33efc2da0a02f",
+   "sound": "ui_close",
+   "variant": 3,
+   "seconds": 0.26
+  },
+  "ui_hover_1.wav": {
+   "sha256": "534bc1b0020b2c63ce9bd910361a4c5fbcd3c3d7945679ea2c399fff7c0aa86e",
+   "sound": "ui_hover",
+   "variant": 1,
+   "seconds": 0.07
+  },
+  "ui_hover_2.wav": {
+   "sha256": "02d72100dfd9bb811fa3fbf9783069fa4447fe29dbbc3da9c1b09785b8d5dbbb",
+   "sound": "ui_hover",
+   "variant": 2,
+   "seconds": 0.07
+  },
+  "ui_hover_3.wav": {
+   "sha256": "35d617c03bc9fb531624c474ccfe2b8a5f69e9ebbe96e3106bd63ba3943fef21",
+   "sound": "ui_hover",
+   "variant": 3,
+   "seconds": 0.07
+  },
+  "ui_open_1.wav": {
+   "sha256": "0a631a0c928a79cc05b54e54ae7b143da6d6a2c1c26c46d2f6afcfc0f94a7900",
+   "sound": "ui_open",
+   "variant": 1,
+   "seconds": 0.3
+  },
+  "ui_open_2.wav": {
+   "sha256": "687165a352f2f5f48f6c0fc12c0ce065fef9519b6d353fd77f861e292baaba42",
+   "sound": "ui_open",
+   "variant": 2,
+   "seconds": 0.3
+  },
+  "ui_open_3.wav": {
+   "sha256": "01fb4585cefc88d2de20ca7bd7ee95c20e5237d504f351be7392177e0f5a6f99",
+   "sound": "ui_open",
+   "variant": 3,
+   "seconds": 0.3
+  },
+  "water_loop.wav": {
+   "sha256": "84304dc62e10dd7ce5cc4312957fd09a4d863029dd9fe4f377577a63f9214010",
+   "sound": "water_loop",
+   "variant": 1,
+   "seconds": 24.0
+  }
+ },
+ "placeholders": {
+  "bake.wav": "6a38b0fb64d0daa35a6b0d3a5df459768ec75746b3244d8037c556acc1257258",
+  "basket_pickup.wav": "8d7d16fffc56aeb3faafe47332e7bd17beaf3935dda347d2fbf338f1934fcce6",
+  "berry_drop.wav": "fd5dc6845373d59d770cbcec2eeae0f5176043740d86c1e81700ec759acbf997",
+  "berry_pick.wav": "2b7dfabb18acceb289b6bc43d4e991a22db0698d0d69c546c67f8211e61d9f48",
+  "fire_light.wav": "a824e95ce45dddaca96d7a3bf64889f0fd573818e424816fa8ca4363bf6bcc83",
+  "fire_loop.wav": "b3dd4fb243a02be05e26ccd0021f2c2fc7f1cd9e68d27916f04a99ae2d0145c8",
+  "footstep.wav": "5089c60deef95b175cc7d90316f540e4195bf6d330d501173f8d0cc651f11515",
+  "hunger_low.wav": "dcc7aec551a74ee889d0d43edf22aaab8daa933fe2e2b82c1eedc6d1e7962fff",
+  "sleep_on.wav": "63269abbabf04c1e7334fb80e8ec82d4ba999c7451a8a65e0406d14fa522f332",
+  "spark.wav": "fc58e5db229455ec03e4cbaa073b93daf300d09be224d1659008ef7e30707cd0",
+  "tree_creak.wav": "bff9a113ad4fc28068492bddf9047bc14d84e163b15c2c3bd0ac9fa1a8d3e095",
+  "tree_fall.wav": "69db5bdae91f298fb3648055b128a2aebb9af1ef2f5b12b41033c7801661793d",
+  "wake.wav": "0c738c153d3107cc1270c0c7bfe1428883db811055424fcf25578f4e6f235957"
+ }
+}

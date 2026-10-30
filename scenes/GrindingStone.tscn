@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/grinding_stone.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/grinding_stone.png" id="2"]
+
+[sub_resource type="RectangleShape2D" id="Shape_grinding_stone"]
+size = Vector2(10, 6)
+
+[node name="GrindingStone" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2")
+offset = Vector2(1, -6)
+
+[node name="Input" type="Sprite2D" parent="."]
+visible = false
+texture_filter = 1
+position = Vector2(0, -7)
+
+[node name="Output" type="Sprite2D" parent="."]
+visible = false
+texture_filter = 1
+position = Vector2(0, -3)
+
+[node name="Label" type="Label" parent="."]
+visible = false
+z_index = 100
+texture_filter = 1
+offset_left = -40.0
+offset_top = -34.0
+offset_right = 40.0
+offset_bottom = -22.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 8
+text = "Grinding stone: empty"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Collision" type="StaticBody2D" parent="."]
+
+[node name="Shape" type="CollisionShape2D" parent="Collision"]
+position = Vector2(0, -3)
+shape = SubResource("Shape_grinding_stone")

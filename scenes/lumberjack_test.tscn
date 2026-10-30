@@ -1,0 +1,269 @@
+[gd_scene format=4 uid="uid://bng5ddwnacebb"]
+
+[ext_resource type="TileSet" uid="uid://b181w5jenx8po" path="res://assets/ground_tileset.tres" id="1_8lf1q"]
+[ext_resource type="Script" uid="uid://qvoyhcxn4nb7" path="res://scripts/lumberjack_move_test.gd" id="3_jyt0f"]
+[ext_resource type="Texture2D" uid="uid://dituh63fomvdy" path="res://sprites/Storage.png" id="7_qgji1"]
+[ext_resource type="SpriteFrames" uid="uid://b8sjqxi2mendw" path="res://sprites/lumberjack_frames.tres" id="8_m0hmt"]
+[ext_resource type="SpriteFrames" uid="uid://cy3tc6hgvf02b" path="res://sprites/hauler_frames.tres" id="8_qgji1"]
+[ext_resource type="Script" uid="uid://c6ohge0wbk5el" path="res://scripts/hauler.gd" id="9_3vf6q"]
+[ext_resource type="SpriteFrames" path="res://sprites/sawmill_frames.tres" id="10_3vf6q"]
+[ext_resource type="Script" uid="uid://fem13tb4uu2m" path="res://scripts/sawmill.gd" id="11_83lok"]
+[ext_resource type="PackedScene" path="res://scenes/Building.tscn" id="28_building"]
+[ext_resource type="Script" path="res://scripts/build_mode.gd" id="29_buildmode"]
+[ext_resource type="Script" path="res://scripts/colony.gd" id="32_colony"]
+[ext_resource type="PackedScene" path="res://scenes/PitSaw.tscn" id="33_pitsaw"]
+[ext_resource type="Script" path="res://scripts/interaction.gd" id="34_interaction"]
+[ext_resource type="Resource" path="res://assets/pit_saw_type.tres" id="35_pittype"]
+[ext_resource type="Resource" path="res://assets/storage_type.tres" id="36_storagetype"]
+[ext_resource type="Resource" path="res://assets/sawmill_type.tres" id="37_sawmilltype"]
+[ext_resource type="Script" path="res://scripts/game_start.gd" id="38_gamestart"]
+[ext_resource type="Script" path="res://scripts/opening_hints.gd" id="39_hints"]
+[ext_resource type="Script" path="res://scripts/held_slot.gd" id="40_heldslot"]
+[ext_resource type="Script" path="res://scripts/work_progress.gd" id="41_workprogress"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="42_hud"]
+[ext_resource type="Script" path="res://scripts/grass_field.gd" id="47_grass"]
+[ext_resource type="Script" path="res://scripts/berry_field.gd" id="48_berries"]
+[ext_resource type="Resource" path="res://assets/wooden_bed_type.tres" id="49_woodenbed"]
+[ext_resource type="Resource" path="res://assets/crate_type.tres" id="50_cratetype"]
+[ext_resource type="Resource" path="res://assets/grinding_stone_type.tres" id="51_grindingstone"]
+[ext_resource type="Resource" path="res://assets/campfire_type.tres" id="52_campfire"]
+[ext_resource type="Resource" path="res://assets/table_type.tres" id="53_board"]
+[ext_resource type="Script" path="res://scripts/game_clock.gd" id="43_clock"]
+[ext_resource type="Script" path="res://scripts/day_night_tint.gd" id="44_tint"]
+[ext_resource type="Script" path="res://scripts/clock_hud.gd" id="45_clockhud"]
+[ext_resource type="Script" path="res://scripts/rest_bar_hud.gd" id="46_restbar"]
+[ext_resource type="Script" path="res://scripts/building_type.gd" id="30_btypescript"]
+[ext_resource type="Resource" path="res://assets/house_type.tres" id="31_housetype"]
+[ext_resource type="Script" path="res://scripts/builder.gd" id="14_bldscr"]
+[ext_resource type="SpriteFrames" path="res://sprites/builder_frames.tres" id="15_bldfrm"]
+[ext_resource type="Script" path="res://scripts/main_character.gd" id="20_mcscript"]
+[ext_resource type="SpriteFrames" path="res://sprites/main_character_frames.tres" id="21_mcframes"]
+[ext_resource type="Script" path="res://scripts/camera_follow.gd" id="22_camfollow"]
+[ext_resource type="Script" path="res://scripts/ground_fill.gd" id="26_groundfill"]
+[ext_resource type="Script" path="res://scripts/storage.gd" id="27_storage"]
+
+[sub_resource type="RectangleShape2D" id="Shape_8x4"]
+size = Vector2(8, 4)
+
+[sub_resource type="RectangleShape2D" id="Shape_sawmill"]
+size = Vector2(27, 10)
+
+[sub_resource type="RectangleShape2D" id="Shape_house"]
+size = Vector2(27, 8)
+
+[sub_resource type="RectangleShape2D" id="Shape_storage"]
+size = Vector2(32, 12)
+
+[node name="LumberjackTest" type="Node2D" unique_id=2129976209]
+y_sort_enabled = true
+script = ExtResource("38_gamestart")
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=589595470]
+z_index = -2
+texture_filter = 1
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA8AAAAAAAAAAAAAABAAAAAAAAAAAAAAABEAAAAAAAAAAAAAABIAAAAAAAAAAAAAABMAAAAAAAAAAAABAAAAAAAAAAAAAAABAAEAAAAAAAAAAAABAAIAAAAAAAAAAAABAAMAAAAAAAAAAAABAAQAAAAAAAAAAAABAAUAAAAAAAAAAAABAAYAAAAAAAAAAAABAAcAAAAAAAAAAAABAAgAAAAAAAAAAAABAAkAAAAAAAAAAAABAAoAAAAAAAAAAAABAAsAAAAAAAAAAAABAAwAAAAAAAAAAAABAA0AAAAAAAAAAAABAA4AAAAAAAAAAAABAA8AAAAAAAAAAAABABAAAAAAAAAAAAABABEAAAAAAAAAAAABABIAAAAAAAAAAAABABMAAAAAAAAAAAACAAAAAAAAAAAAAAACAAEAAAAAAAAAAAACAAIAAAAAAAAAAAACAAMAAAAAAAAAAAACAAQAAAAAAAAAAAACAAUAAAAAAAAAAAACAAYAAAAAAAAAAAACAAcAAAAAAAAAAAACAAgAAAAAAAAAAAACAAkAAAAAAAAAAAACAAoAAAAAAAAAAAACAAsAAAAAAAAAAAACAAwAAAAAAAAAAAACAA0AAAAAAAAAAAACAA4AAAAAAAAAAAACAA8AAAAAAAAAAAACABAAAAAAAAAAAAACABEAAAAAAAAAAAACABIAAAAAAAAAAAACABMAAAAAAAAAAAADAAAAAAAAAAAAAAADAAEAAAAAAAAAAAADAAIAAAAAAAAAAAADAAMAAAAAAAAAAAADAAQAAAAAAAAAAAADAAUAAAAAAAAAAAADAAYAAAAAAAAAAAADAAcAAAAAAAAAAAADAAgAAAAAAAAAAAADAAkAAAAAAAAAAAADAAoAAAAAAAAAAAADAAsAAAAAAAAAAAADAAwAAAAAAAAAAAADAA0AAAAAAAAAAAADAA4AAAAAAAAAAAADAA8AAAAAAAAAAAADABAAAAAAAAAAAAADABEAAAAAAAAAAAADABIAAAAAAAAAAAADABMAAAAAAAAAAAAEAAAAAAAAAAAAAAAEAAEAAAAAAAAAAAAEAAIAAAAAAAAAAAAEAAMAAAAAAAAAAAAEAAQAAAAAAAAAAAAEAAUAAAAAAAAAAAAEAAYAAAAAAAAAAAAEAAcAAAAAAAAAAAAEAAgAAAAAAAAAAAAEAAkAAAAAAAAAAAAEAAoAAAAAAAAAAAAEAAsAAAAAAAAAAAAEAAwAAAAAAAAAAAAEAA0AAAAAAAAAAAAEAA4AAAAAAAAAAAAEAA8AAAAAAAAAAAAEABAAAAAAAAAAAAAEABEAAAAAAAAAAAAEABIAAAAAAAAAAAAEABMAAAAAAAAAAAAFAAAAAAAAAAAAAAAFAAEAAAAAAAAAAAAFAAIAAAAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAAAAAAAAAAAFAAUAAAAAAAAAAAAFAAYAAAAAAAAAAAAFAAcAAAAAAAAAAAAFAAgAAAAAAAAAAAAFAAkAAAAAAAAAAAAFAAoAAAAAAAAAAAAFAAsAAAAAAAAAAAAFAAwAAAAAAAAAAAAFAA0AAAAAAAAAAAAFAA4AAAAAAAAAAAAFAA8AAAAAAAAAAAAFABAAAAAAAAAAAAAFABEAAAAAAAAAAAAFABIAAAAAAAAAAAAFABMAAAAAAAAAAAAGAAAAAAAAAAAAAAAGAAEAAAAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAAAAAAAAAAAGAAQAAAAAAAAAAAAGAAUAAAAAAAAAAAAGAAYAAAAAAAAAAAAGAAcAAAAAAAAAAAAGAAgAAAAAAAAAAAAGAAkAAAAAAAAAAAAGAAoAAAAAAAAAAAAGAAsAAAAAAAAAAAAGAAwAAAAAAAAAAAAGAA0AAAAAAAAAAAAGAA4AAAAAAAAAAAAGAA8AAAAAAAAAAAAGABAAAAAAAAAAAAAGABEAAAAAAAAAAAAGABIAAAAAAAAAAAAGABMAAAAAAAAAAAAHAAAAAAAAAAAAAAAHAAEAAAAAAAAAAAAHAAIAAAAAAAAAAAAHAAMAAAAAAAAAAAAHAAQAAAAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAAAAAAAAAAAHAAcAAAAAAAAAAAAHAAgAAAAAAAAAAAAHAAkAAAAAAAAAAAAHAAoAAAAAAAAAAAAHAAsAAAAAAAAAAAAHAAwAAAAAAAAAAAAHAA0AAAAAAAAAAAAHAA4AAAAAAAAAAAAHAA8AAAAAAAAAAAAHABAAAAAAAAAAAAAHABEAAAAAAAAAAAAHABIAAAAAAAAAAAAHABMAAAAAAAAAAAAIAAAAAAAAAAAAAAAIAAEAAAAAAAAAAAAIAAIAAAAAAAAAAAAIAAMAAAAAAAAAAAAIAAQAAAAAAAAAAAAIAAUAAAAAAAAAAAAIAAYAAAAAAAAAAAAIAAcAAAAAAAAAAAAIAAgAAAAAAAAAAAAIAAkAAAAAAAAAAAAIAAoAAAAAAAAAAAAIAAsAAAAAAAAAAAAIAAwAAAAAAAAAAAAIAA0AAAAAAAAAAAAIAA4AAAAAAAAAAAAIAA8AAAAAAAAAAAAIABAAAAAAAAAAAAAIABEAAAAAAAAAAAAIABIAAAAAAAAAAAAIABMAAAAAAAAAAAAJAAAAAAAAAAAAAAAJAAEAAAAAAAAAAAAJAAIAAAAAAAAAAAAJAAMAAAAAAAAAAAAJAAQAAAAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAAAAAAAAAAAJAAcAAAAAAAAAAAAJAAgAAAAAAAAAAAAJAAkAAAAAAAAAAAAJAAoAAAAAAAAAAAAJAAsAAAAAAAAAAAAJAAwAAAAAAAAAAAAJAA0AAAAAAAAAAAAJAA4AAAAAAAAAAAAJAA8AAAAAAAAAAAAJABAAAAAAAAAAAAAJABEAAAAAAAAAAAAJABIAAAAAAAAAAAAJABMAAAAAAAAAAAAKAAAAAAAAAAAAAAAKAAEAAAAAAAAAAAAKAAIAAAAAAAAAAAAKAAMAAAAAAAAAAAAKAAQAAAAAAAAAAAAKAAUAAAAAAAAAAAAKAAYAAAAAAAAAAAAKAAcAAAAAAAAAAAAKAAgAAAAAAAAAAAAKAAkAAAAAAAAAAAAKAAoAAAAAAAAAAAAKAAsAAAAAAAAAAAAKAAwAAAAAAAAAAAAKAA0AAAAAAAAAAAAKAA4AAAAAAAAAAAAKAA8AAAAAAAAAAAAKABAAAAAAAAAAAAAKABEAAAAAAAAAAAAKABIAAAAAAAAAAAAKABMAAAAAAAAAAAALAAAAAAAAAAAAAAALAAEAAAAAAAAAAAALAAIAAAAAAAAAAAALAAMAAAAAAAAAAAALAAQAAAAAAAAAAAALAAUAAAAAAAAAAAALAAYAAAAAAAAAAAALAAcAAAAAAAAAAAALAAgAAAAAAAAAAAALAAkAAAAAAAAAAAALAAoAAAAAAAAAAAALAAsAAAAAAAAAAAALAAwAAAAAAAAAAAALAA0AAAAAAAAAAAALAA4AAAAAAAAAAAALAA8AAAAAAAAAAAALABAAAAAAAAAAAAALABEAAAAAAAAAAAALABIAAAAAAAAAAAALABMAAAAAAAAAAAAMAAAAAAAAAAAAAAAMAAEAAAAAAAAAAAAMAAIAAAAAAAAAAAAMAAMAAAAAAAAAAAAMAAQAAAAAAAAAAAAMAAUAAAAAAAAAAAAMAAYAAAAAAAAAAAAMAAcAAAAAAAAAAAAMAAgAAAAAAAAAAAAMAAkAAAAAAAAAAAAMAAoAAAAAAAAAAAAMAAsAAAAAAAAAAAAMAAwAAAAAAAAAAAAMAA0AAAAAAAAAAAAMAA4AAAAAAAAAAAAMAA8AAAAAAAAAAAAMABAAAAAAAAAAAAAMABEAAAAAAAAAAAAMABIAAAAAAAAAAAAMABMAAAAAAAAAAAANAAAAAAAAAAAAAAANAAEAAAAAAAAAAAANAAIAAAAAAAAAAAANAAMAAAAAAAAAAAANAAQAAAAAAAAAAAANAAUAAAAAAAAAAAANAAYAAAAAAAAAAAANAAcAAAAAAAAAAAANAAgAAAAAAAAAAAANAAkAAAAAAAAAAAANAAoAAAAAAAAAAAANAAsAAAAAAAAAAAANAAwAAAAAAAAAAAANAA0AAAAAAAAAAAANAA4AAAAAAAAAAAANAA8AAAAAAAAAAAANABAAAAAAAAAAAAANABEAAAAAAAAAAAANABIAAAAAAAAAAAANABMAAAAAAAAAAAAOAAAAAAAAAAAAAAAOAAEAAAAAAAAAAAAOAAIAAAAAAAAAAAAOAAMAAAAAAAAAAAAOAAQAAAAAAAAAAAAOAAUAAAAAAAAAAAAOAAYAAAAAAAAAAAAOAAcAAAAAAAAAAAAOAAgAAAAAAAAAAAAOAAkAAAAAAAAAAAAOAAoAAAAAAAAAAAAOAAsAAAAAAAAAAAAOAAwAAAAAAAAAAAAOAA0AAAAAAAAAAAAOAA4AAAAAAAAAAAAOAA8AAAAAAAAAAAAOABAAAAAAAAAAAAAOABEAAAAAAAAAAAAOABIAAAAAAAAAAAAOABMAAAAAAAAAAAAPAAAAAAAAAAAAAAAPAAEAAAAAAAAAAAAPAAIAAAAAAAAAAAAPAAMAAAAAAAAAAAAPAAQAAAAAAAAAAAAPAAUAAAAAAAAAAAAPAAYAAAAAAAAAAAAPAAcAAAAAAAAAAAAPAAgAAAAAAAAAAAAPAAkAAAAAAAAAAAAPAAoAAAAAAAAAAAAPAAsAAAAAAAAAAAAPAAwAAAAAAAAAAAAPAA0AAAAAAAAAAAAPAA4AAAAAAAAAAAAPAA8AAAAAAAAAAAAPABAAAAAAAAAAAAAPABEAAAAAAAAAAAAPABIAAAAAAAAAAAAPABMAAAAAAAAAAAAQAAAAAAAAAAAAAAAQAAEAAAAAAAAAAAAQAAIAAAAAAAAAAAAQAAMAAAAAAAAAAAAQAAQAAAAAAAAAAAAQAAUAAAAAAAAAAAAQAAYAAAAAAAAAAAAQAAcAAAAAAAAAAAAQAAgAAAAAAAAAAAAQAAkAAAAAAAAAAAAQAAoAAAAAAAAAAAAQAAsAAAAAAAAAAAAQAAwAAAAAAAAAAAAQAA0AAAAAAAAAAAAQAA4AAAAAAAAAAAAQAA8AAAAAAAAAAAAQABAAAAAAAAAAAAAQABEAAAAAAAAAAAAQABIAAAAAAAAAAAAQABMAAAAAAAAAAAARAAAAAAAAAAAAAAARAAEAAAAAAAAAAAARAAIAAAAAAAAAAAARAAMAAAAAAAAAAAARAAQAAAAAAAAAAAARAAUAAAAAAAAAAAARAAYAAAAAAAAAAAARAAcAAAAAAAAAAAARAAgAAAAAAAAAAAARAAkAAAAAAAAAAAARAAoAAAAAAAAAAAARAAsAAAAAAAAAAAARAAwAAAAAAAAAAAARAA0AAAAAAAAAAAARAA4AAAAAAAAAAAARAA8AAAAAAAAAAAARABAAAAAAAAAAAAARABEAAAAAAAAAAAARABIAAAAAAAAAAAARABMAAAAAAAAAAAASAAAAAAAAAAAAAAASAAEAAAAAAAAAAAASAAIAAAAAAAAAAAASAAMAAAAAAAAAAAASAAQAAAAAAAAAAAASAAUAAAAAAAAAAAASAAYAAAAAAAAAAAASAAcAAAAAAAAAAAASAAgAAAAAAAAAAAASAAkAAAAAAAAAAAASAAoAAAAAAAAAAAASAAsAAAAAAAAAAAASAAwAAAAAAAAAAAASAA0AAAAAAAAAAAASAA4AAAAAAAAAAAASAA8AAAAAAAAAAAASABAAAAAAAAAAAAASABEAAAAAAAAAAAASABIAAAAAAAAAAAASABMAAAAAAAAAAAATAAAAAAAAAAAAAAATAAEAAAAAAAAAAAATAAIAAAAAAAAAAAATAAMAAAAAAAAAAAATAAQAAAAAAAAAAAATAAUAAAAAAAAAAAATAAYAAAAAAAAAAAATAAcAAAAAAAAAAAATAAgAAAAAAAAAAAATAAkAAAAAAAAAAAATAAoAAAAAAAAAAAATAAsAAAAAAAAAAAATAAwAAAAAAAAAAAATAA0AAAAAAAAAAAATAA4AAAAAAAAAAAATAA8AAAAAAAAAAAATABAAAAAAAAAAAAATABEAAAAAAAAAAAATABIAAAAAAAAAAAATABMAAAAAAAAAAAA=")
+tile_set = ExtResource("1_8lf1q")
+script = ExtResource("26_groundfill")
+
+[node name="Cabin" parent="." instance=ExtResource("28_building")]
+position = Vector2(158, 78)
+building_type = ExtResource("31_housetype")
+starts_built = true
+
+[node name="Storage" type="Sprite2D" parent="." unique_id=288429749 groups=["build_blockers"]]
+texture_filter = 1
+position = Vector2(64, 144)
+offset = Vector2(0, -16)
+texture = ExtResource("7_qgji1")
+script = ExtResource("27_storage")
+
+[node name="CountLabel" type="Label" parent="Storage"]
+z_index = 100
+texture_filter = 1
+offset_left = -40.0
+offset_top = -46.0
+offset_right = 40.0
+offset_bottom = -34.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 8
+text = "Logs 0 / Planks 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=219214653]
+position = Vector2(192, 192)
+script = ExtResource("22_camfollow")
+
+[node name="Lumberjack" type="AnimatedSprite2D" parent="." unique_id=976082539]
+texture_filter = 1
+position = Vector2(64, 72)
+offset = Vector2(0, -8)
+sprite_frames = ExtResource("8_m0hmt")
+animation = &"idle"
+script = ExtResource("3_jyt0f")
+
+[node name="Hauler" type="AnimatedSprite2D" parent="." unique_id=366076656]
+texture_filter = 1
+position = Vector2(96, 168)
+offset = Vector2(0, -8)
+sprite_frames = ExtResource("8_qgji1")
+animation = &"idle"
+script = ExtResource("9_3vf6q")
+plank_yard = NodePath("../PlankYard")
+
+[node name="Sawmill" type="AnimatedSprite2D" parent="." unique_id=702846117 groups=["build_blockers"]]
+texture_filter = 1
+position = Vector2(128, 141)
+offset = Vector2(0, -13)
+sprite_frames = ExtResource("10_3vf6q")
+animation = &"turning"
+autoplay = "turning"
+script = ExtResource("11_83lok")
+
+[node name="House" parent="." unique_id=848109221 instance=ExtResource("28_building")]
+position = Vector2(0, 73)
+
+[node name="Builder" type="AnimatedSprite2D" parent="." unique_id=848109222]
+texture_filter = 1
+position = Vector2(0, 104)
+offset = Vector2(0, -8)
+sprite_frames = ExtResource("15_bldfrm")
+animation = &"idle"
+script = ExtResource("14_bldscr")
+
+[node name="Collision" type="StaticBody2D" parent="Sawmill"]
+
+[node name="Shape" type="CollisionShape2D" parent="Sawmill/Collision"]
+position = Vector2(0.5, -5)
+shape = SubResource("Shape_sawmill")
+
+[node name="Collision" type="StaticBody2D" parent="Storage"]
+
+[node name="Shape" type="CollisionShape2D" parent="Storage/Collision"]
+position = Vector2(0, -6)
+shape = SubResource("Shape_storage")
+
+[node name="MainCharacter" type="CharacterBody2D" parent="." unique_id=9200001]
+position = Vector2(352, 280)
+motion_mode = 1
+script = ExtResource("20_mcscript")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="MainCharacter" unique_id=9200002]
+texture_filter = 1
+offset = Vector2(0, -8)
+sprite_frames = ExtResource("21_mcframes")
+animation = &"idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MainCharacter" unique_id=9200003]
+position = Vector2(0, -2)
+shape = SubResource("Shape_8x4")
+
+[node name="Interaction" type="Node2D" parent="MainCharacter"]
+script = ExtResource("34_interaction")
+
+[node name="Prompt" type="Node2D" parent="MainCharacter/Interaction"]
+visible = false
+top_level = true
+z_index = 100
+texture_filter = 1
+
+[node name="Hud" type="CanvasLayer" parent="MainCharacter/Interaction"]
+
+[node name="RestBar" type="Control" parent="MainCharacter/Interaction/Hud"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 4.0
+offset_top = 216.0
+offset_right = 64.0
+offset_bottom = 226.0
+mouse_filter = 2
+script = ExtResource("46_restbar")
+
+[node name="HeldSlot" type="Control" parent="MainCharacter/Interaction/Hud"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 4.0
+offset_top = 228.0
+offset_right = 106.0
+offset_bottom = 266.0
+mouse_filter = 2
+script = ExtResource("40_heldslot")
+
+[node name="PitSaw" parent="." instance=ExtResource("33_pitsaw")]
+position = Vector2(192, 144)
+
+[node name="BuildMode" type="Node2D" parent="."]
+script = ExtResource("29_buildmode")
+building_types = Array[ExtResource("30_btypescript")]([ExtResource("31_housetype"), ExtResource("35_pittype"), ExtResource("36_storagetype"), ExtResource("37_sawmilltype"), ExtResource("49_woodenbed"), ExtResource("50_cratetype"), ExtResource("51_grindingstone"), ExtResource("52_campfire"), ExtResource("53_board")])
+
+[node name="Ghost" type="Sprite2D" parent="BuildMode"]
+visible = false
+z_index = 50
+texture_filter = 1
+
+[node name="LandingPoint" type="Marker2D" parent="."]
+position = Vector2(64, 576)
+
+[node name="Colony" type="Node2D" parent="."]
+script = ExtResource("32_colony")
+
+[node name="Hud" type="CanvasLayer" parent="Colony"]
+
+[node name="CountLabel" type="Label" parent="Colony/Hud"]
+texture_filter = 1
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 260.0
+offset_bottom = 16.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 8
+text = "Colonists: 0  Housed: 0  Free beds: 0"
+
+[node name="OpeningHints" type="Node" parent="."]
+script = ExtResource("39_hints")
+
+[node name="Layer" type="CanvasLayer" parent="OpeningHints"]
+
+[node name="HintLabel" type="Label" parent="OpeningHints/Layer"]
+visible = false
+texture_filter = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -130.0
+offset_top = 4.0
+offset_right = 130.0
+offset_bottom = 28.0
+grow_horizontal = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="GrassField" type="Node" parent="."]
+script = ExtResource("47_grass")
+
+[node name="BerryField" type="Node" parent="."]
+script = ExtResource("48_berries")
+
+[node name="GameClock" type="Node" parent="."]
+script = ExtResource("43_clock")
+
+[node name="DayNightTint" type="CanvasModulate" parent="."]
+script = ExtResource("44_tint")
+
+[node name="ClockHud" type="Node" parent="."]
+script = ExtResource("45_clockhud")
+
+[node name="Hud" type="Node" parent="."]
+script = ExtResource("42_hud")
+
+[node name="WorkProgress" type="Node" parent="."]
+script = ExtResource("41_workprogress")
+
+[node name="PlankYard" type="Marker2D" parent="."]
+position = Vector2(88, 184)
+

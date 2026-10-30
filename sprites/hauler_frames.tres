@@ -1,0 +1,117 @@
+[gd_resource type="SpriteFrames" load_steps=14 format=3]
+
+[ext_resource type="Texture2D" uid="uid://cw288iguwr31h" path="res://sprites/hauler_walk.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://bibewh81rbod2" path="res://sprites/hauler_carrying_plank.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1"]
+atlas = ExtResource("1")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2"]
+atlas = ExtResource("1")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3"]
+atlas = ExtResource("1")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4"]
+atlas = ExtResource("1")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5"]
+atlas = ExtResource("1")
+region = Rect2(64, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6"]
+atlas = ExtResource("1")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Carry1"]
+atlas = ExtResource("2")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Carry2"]
+atlas = ExtResource("2")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Carry3"]
+atlas = ExtResource("2")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Carry4"]
+atlas = ExtResource("2")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Carry5"]
+atlas = ExtResource("2")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_Carry6"]
+atlas = ExtResource("2")
+region = Rect2(160, 0, 32, 32)
+
+[resource]
+animations = [{
+"name": &"idle",
+"speed": 5.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1")
+}]
+}, {
+"name": &"walk",
+"speed": 7.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6")
+}]
+}, {
+"name": &"carry_plank",
+"speed": 7.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Carry1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Carry2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Carry3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Carry4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Carry5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Carry6")
+}]
+}, {
+"name": &"carry_plank_idle",
+"speed": 5.0,
+"loop": true,
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_Carry1")
+}]
+}]

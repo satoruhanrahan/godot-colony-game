@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/bed.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/wooden_bed.png" id="2"]
+
+[node name="WoodenBed" type="Node2D"]
+script = ExtResource("1")
+kind = 1
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2")
