@@ -45,7 +45,7 @@ func _ready() -> void:
 	menu.name = "BuildMenu"
 	add_child(menu)
 	menu.setup(self)
-	Ui.register_closable(Callable(self, "is_panel_open"), Callable(self, "close_panel"))
+	Ui.register_closable(Callable(self, "is_panel_open"), Callable(self, "close_panel"), "build mode (the build menu)", Ui.TIER_BUILD)
 	_set_active(false)
 
 # (For the UI's Esc: close the menu first, pause only when nothing is open.)

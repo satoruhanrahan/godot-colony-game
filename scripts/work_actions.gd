@@ -14,13 +14,16 @@ const FoodConfig = preload("res://scripts/food_config.gd")
 const PlankPiles = preload("res://scripts/plank_piles.gd")
 const Items = preload("res://scripts/items.gd")
 
-# The tool each kind of work uses (for friend_needs_tools), "" = none.
-const TOOL_OF: Dictionary = {&"chop": &"axe", &"delimb": &"axe", &"hammer": &"hammer", &"till": &"hoe", &"harvest": &"sickle", &"water": &"bucket", &"pull": &""}
+const ToolConfig = preload("res://scripts/tool_config.gd")
+
+# The tool a kind of work needs (the ONE table is ToolConfig.job_tools), "" = none.
+static func tool_of(kind: StringName) -> StringName:
+	return ToolConfig.tool_for(kind)
 
 # Seconds one action takes at full efficiency.
 static func seconds(kind: StringName, player: Node) -> float:
 	match kind:
-		&"chop", &"delimb", &"hammer", &"pull":
+		&"chop", &"delimb", &"hammer", &"pull", &"dig":
 			var anim: StringName = &"chop" if kind == &"delimb" else (&"hammer" if kind == &"hammer" else (&"pull" if kind == &"pull" else kind))
 			var frames: SpriteFrames = player.sprite.sprite_frames
 			if frames != null and frames.has_animation(anim):
@@ -45,9 +48,16 @@ static func chop(scene_tree: SceneTree, tree: Node2D, kind: StringName, hits: in
 # One hammer blow on a blueprint.
 static func hammer(scene_tree: SceneTree, b: Node2D) -> Dictionary:
 	b.hammer_hit()
-	var finished: bool = b.state == b.State.BUILT
-	WorkFeedback.hit(scene_tree, &"hammer", b, b.build_progress, b.BUILD_HITS, finished)
-	return {"done": b.build_progress, "total": b.BUILD_HITS, "finished": finished}
+	var finished: bool = b.is_finished()
+	WorkFeedback.hit(scene_tree, &"hammer", b, b.build_progress, b.build_total(), finished)
+	return {"done": b.build_progress, "total": b.build_total(), "finished": finished}
+
+# One dig of a hole that is dug by hand (the pit saw): the shovel strike.
+static func dig(scene_tree: SceneTree, b: Node2D) -> Dictionary:
+	b.dig()
+	var finished: bool = not b.needs_digging()
+	WorkFeedback.hit(scene_tree, &"dig", b, b.dig_count, b.DIG_HITS, finished)
+	return {"done": b.dig_count, "total": b.DIG_HITS, "finished": finished}
 
 # One pull on a patch of tall grass; when it comes up the bundle is put down at `at`.
 static func pull(scene_tree: SceneTree, patch: Node2D, player: Node, at: Vector2) -> Dictionary:

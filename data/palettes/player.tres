@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CharacterPalette" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_palette.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+; The player's own art as drawn (hat and pants #484a77). Not applied to the player; the settlers avoid this look.
+palette_name = "Player"
+hat_color = Color(0.282353, 0.290196, 0.466667, 1)
+pants_color = Color(0.282353, 0.290196, 0.466667, 1)

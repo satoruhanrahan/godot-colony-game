@@ -226,6 +226,7 @@ func can_cancel() -> bool:
 
 # The empty blueprint goes away.
 func cancel() -> void:
+	_clear_designation()
 	remove_from_group("buildings")
 	remove_from_group("build_blockers")
 	queue_free()
@@ -247,6 +248,34 @@ func remaining_fraction() -> float:
 func is_waiting() -> bool:
 	return state == State.WAITING
 
+# --- The common face of everything buildable (a blueprint of any type; the PitSaw has the same methods): Logistics.blueprints() lists what has
+# is_blueprint(), the Builder's job (work_jobs.gd BuildJob) and the designation only ever use these. ---
+func is_finished() -> bool:
+	return state == State.BUILT
+
+# A finished or cancelled blueprint has no mark (designation_mode.gd keeps them in one place).
+func _clear_designation() -> void:
+	if is_inside_tree():
+		load("res://scripts/designation_mode.gd").clear_for(get_tree(), self)
+
+func is_blueprint() -> bool:
+	return state != State.BUILT and building_type != null
+
+# Digging (the pit saw's hole) is not part of an ordinary blueprint.
+func needs_digging() -> bool:
+	return false
+
+func dig_spot_world() -> Vector2:
+	return hammer_spot_world()
+
+func build_total() -> int:
+	return BUILD_HITS
+
+# One plank brought to it.
+func deliver_plank() -> bool:
+	planks_ready += 1
+	return true
+
 func start_building() -> void:
 	state = State.BUILDING
 
@@ -257,6 +286,7 @@ func finish_building() -> void:
 		var feedback = load("res://scripts/work_feedback.gd")
 		feedback.completed(get_tree(), global_position)
 	build_progress = BUILD_HITS
+	_clear_designation()
 	built.emit(self)
 	if building_type != null and building_type.built_scene != null:
 		_become_built_scene()

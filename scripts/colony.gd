@@ -41,10 +41,22 @@ enum CounterMode { ALWAYS, USEFUL }
 @export var assist_radius_px: float = 160.0
 @export var assist_idle_seconds: float = 4.0
 @export var friend_work_efficiency: float = 0.8
-# When true he works with the tool from the toolbox (he fetches it, waits with "No axe available" when it is not there); off: no tools.
-@export var friend_needs_tools: bool = false
+# When true (the default, for every colonist) he works with a tool he has fetched (a toolbox first, then a loose one within
+# ToolConfig.tool_fetch_radius_px), keeps it while there is work for it and puts it back; with none to be had he says so and does not work
+# at it ("No axe available."). Off: he works without tools. The tool table and the timings are in tool_config.gd.
+@export var friend_needs_tools: bool = true
+# THE FARMER ROLE (farm_jobs.gd): he never threshes the sheaves in stock (lying about and in crates) below this many, so the field can always be replanted
+# and the next harvest is not eaten; a phase he cannot do (no hoe, no seeds, no water, no way to the cell) is left alone for farm_skip_seconds.
+@export var farm_seed_reserve: int = 3
+@export var farm_skip_seconds: float = 30.0
+# THE COOK ROLE (cook_jobs.gd): he bakes until this much flatbread is in storage (crates and tables; what he holds does not count) and then waits ("Enough bread").
+# It is changed in the Orders panel (0 to 20).
+@export var bread_target: int = 6
 # How many people a room may already show before a following colonist waits at the door instead.
 @export var visitor_limit: int = 4
+# Prints once a second, for every colonist, his stance, roles, tasks, the job he picked and why each candidate was not possible (for finding
+# out why a colonist does nothing). Each colonist's order AI has the same flag (debug_job_log) for just him.
+@export var debug_job_log: bool = false
 # The quick order key (F): toggles Follow me / Stay here for the colonist within this many pixels (10 tiles).
 @export var order_toggle_distance_px: float = 320.0
 
@@ -68,6 +80,13 @@ func _ready() -> void:
 	var designation: Node2D = load("res://scripts/designation_mode.gd").new()
 	designation.name = "Designation"
 	add_child(designation)
+	# Debug builds check every frame that nobody holds two things and that no tool is held twice, duplicated or lost (held_item_guard.gd).
+	if OS.is_debug_build():
+		var guard: Node = load("res://scripts/held_item_guard.gd").new()
+		add_child(guard)
+		# ... and that no colonist is left invisible, transparent or blank (colonist_view_guard.gd); F8 shows where the colonists are.
+		var view_guard: Node = load("res://scripts/colonist_view_guard.gd").new()
+		add_child(view_guard)
 	# The counter is the UI's crisp text, top-left.
 	var old_hud: Node = get_node_or_null("Hud")
 	if old_hud != null:
@@ -160,10 +179,20 @@ func request_settler_batch(count: int = 0) -> bool:
 	_spawn_colonists(wanted)
 	return true
 
+# The first colonist to land is the friend (his own look); every settler after him gets a look nobody wears.
+var _friend_landed: bool = false
+
+func _next_palette() -> CharacterPalette:
+	if not _friend_landed:
+		_friend_landed = true
+		return load(PaletteList.FRIEND_PATH) as CharacterPalette
+	return PaletteList.unused_palette(get_tree())
+
 func _spawn_colonists(count: int) -> void:
 	for i in count:
 		var colonist: Colonist = COLONIST_SCENE.instantiate()
 		colonist.landing_position = landing.global_position
+		colonist.palette = _next_palette()
 		# A batch spreads out a little so nobody stands exactly on top of another.
 		colonist.position = landing.global_position + Vector2(i * 6.0, 0.0)
 		# Same y-sorted parent as the other characters.

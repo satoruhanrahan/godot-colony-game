@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CharacterPalette" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_palette.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+; The friend: hat deep green #1f5a34, pants warm brown #8a5a32. Change the two colours to change how he looks.
+palette_name = "Friend"
+hat_color = Color(0.121569, 0.352941, 0.203922, 1)
+pants_color = Color(0.541176, 0.352941, 0.196078, 1)

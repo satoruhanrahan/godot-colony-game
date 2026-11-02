@@ -20,9 +20,12 @@ extends Node
 # small bob, plus the real sound and particles of the hit. Drawing colonist_chop / _hammer / _pull / _till is the way to improve it.
 
 const WorkActions = preload("res://scripts/work_actions.gd")
+const WorkJobsScript = preload("res://scripts/work_jobs.gd")
 const LogDragger = preload("res://scripts/log_dragger.gd")
 const PlankPiles = preload("res://scripts/plank_piles.gd")
 const Items = preload("res://scripts/items.gd")
+const BuildingInterior = preload("res://scripts/building_interior.gd")
+const Logistics = preload("res://scripts/logistics.gd")
 
 enum Phase { MOVE, WAIT, FIDGET }
 
@@ -32,12 +35,43 @@ var working: bool = false
 var job: Dictionary = {}
 var board_job = null
 var visiting: Node2D = null
+# The room (BuildingInterior) he has been put in by his work or a visit: his position is then really in that room (see go()), seen only while
+# the player is in it. null = outdoors.
+var inside_room: Node2D = null
+# He tried to go through a door while dragging a log (said once as "Cannot reach ...").
+var door_blocked: bool = false
+# How many times he has gone in through a door (for the self-check).
+var room_entries: int = 0
 var status: String = ""
 
 # The work job he is doing (roles and tasks, work_jobs.gd), what he carries ({"kind", "amount"} or {}), the log he drags, and the book-keeping
 # of failures: targets skipped for a while, the last failure and the last "Done ..." report (both shown on the hover line).
 var work_job = null
-var carrying: Dictionary = {}
+# GETTING READY FOR BED. When he gets sleepy (bedtime, or exhausted) in the middle of his work he does not vanish and nothing is dropped where he stands:
+# Colonist asks ready_for_bed() every frame; the first call makes him "sleepy", and _sleepy_step then takes the place of the normal tick until he is ready:
+# the swing or step in hand is finished (SLEEPY_SWING_SECONDS at most), a log he drags or a thing he carries goes on to where it is going (storage, a crate, a
+# blueprint: the CarryJob, SLEEPY_CARRY_SECONDS at most), the job lets go of its claims (the tree, the plot cell, the blueprint are free for anyone) and a
+# tool goes back into a toolbox (ReturnToolJob); whatever is still in his hands after SLEEPY_MAX_SECONDS, or has nowhere to go, is put down beside his house
+# (never on its door). Then he walks to his bed in the open like anybody going home.
+const SLEEPY_SWING_SECONDS: float = 2.5
+const SLEEPY_CARRY_SECONDS: float = 45.0
+const SLEEPY_MAX_SECONDS: float = 75.0
+var sleepy: bool = false
+var _sleepy_time: float = 0.0
+var _sleepy_strikes: int = 0
+var _prev_working: bool = false
+# ASSIST + the Cook's chain (cook_jobs.gd): the step he is doing for me while I grind, make dough or bake, whatever his roles are.
+var assist_cook = null
+# What the Farmer leaves alone for a while: phase (&"sow") or cell -> the time (seconds) until which it is skipped (farm_jobs.gd).
+var farm_skip: Dictionary = {}
+# THE ONE HELD-ITEM SLOT (character_hands.gd): the tool in his hands (ColonistTools.held), a plank, the saw blade or an item (`carrying`) are all this one slot,
+# so he can never hold two things. `carrying` is a read-only view of it ({"kind", "amount"} for a carried item, {} for nothing or a tool).
+var hands: CharacterHands = null
+var carrying: Dictionary:
+	get:
+		return hands.item() if hands != null else {}
+	set(_value):
+		CharacterHands.report("%s: ColonistOrderAI.carrying is read-only (set_carry / clear_carry change the one hands slot)" % c.display_name)
 var carry_sprite: Sprite2D = null
 var dragger = null
 var drag_tree = null
@@ -54,14 +88,31 @@ var _slack: float = 0.0
 var _replan: float = 0.0
 var _timer: float = 0.0
 var _fidget_target: Vector2 = Vector2.INF
-var _tool: StringName = &""
-var _tool_box: Node2D = null
+# His tools (colonist_tools.gd): what he holds, fetching, returning.
+var tools: Node = null
+# Strikes he has made (a recall waits for the swing in hand), and the stuck bookkeeping when the AI itself walks for an Assist copy.
+var strikes: int = 0
+# Logs he has sawn since the last "Done sawing." report, and in all.
+var sawn: int = 0
+var sawn_total: int = 0
+var unreachable: bool = false
+var _stuck_base: int = 0
+# Prints, once a second, his stance, roles, tasks, the job he picked and why each candidate was not (see explain_jobs): for finding out why a
+# colonist does nothing. (Colony.debug_job_log turns it on for everyone.)
+@export var debug_job_log: bool = false
+var _debug_left: float = 0.0
+var _preempt_check: float = 0.0
 var _said: Dictionary = {}
 
 func setup(colonist: Node2D) -> void:
 	c = colonist
 	name = "OrderAI"
 	dragger = LogDragger.new(colonist, colonist)
+	hands = CharacterHands.new(colonist.name)
+	hands.dragger = dragger
+	tools = preload("res://scripts/colonist_tools.gd").new()
+	add_child(tools)
+	tools.setup(colonist, self)
 
 func begin() -> void:
 	phase = Phase.MOVE if c.orders.stance == c.Orders.Stance.STAY else Phase.WAIT
@@ -70,11 +121,11 @@ func begin() -> void:
 	c._reset_stuck()
 
 func has_claims() -> bool:
-	return not job.is_empty() or visiting != null or _tool != &"" or board_job != null or work_job != null or dragger.is_dragging()
+	return not job.is_empty() or visiting != null or inside_room != null or tools.reserving() or board_job != null or work_job != null or dragger.is_dragging()
 
 # Gives back everything: claims, a borrowed tool, the room he is visiting, the work job; with `drop`, what he carries is set down where he stands
 # (the nearest free ground). Safe to call at any time.
-func release_all(drop: bool = false) -> void:
+func release_all(drop: bool = false, leave: bool = true) -> void:
 	_end_job()
 	if board_job != null:
 		board_job.release()
@@ -82,8 +133,13 @@ func release_all(drop: bool = false) -> void:
 	if work_job != null:
 		work_job.release()
 		work_job = null
-	_return_tool()
+	if assist_cook != null:
+		assist_cook.release()
+		assist_cook = null
+	tools.release_all()
 	_leave_visit()
+	if leave:
+		leave_room_now()
 	working = false
 	if drop:
 		drop_carry()
@@ -92,44 +148,236 @@ func release_all(drop: bool = false) -> void:
 # where it is); what he carries in his hands stays with him through a meal and is delivered when he is back, unless he is about to starve or
 # to sleep, when it is set down where he stands.
 func on_interrupted() -> void:
-	var clock: Node = c.get_tree().get_first_node_in_group("game_clock")
+	sleepy = false
 	var drop: bool = false
+	var asleep_states: Array = [c.State.TO_BED, c.State.ON_BED, c.State.SLEEPING_OUTSIDE, c.State.MOVING_IN, c.State.RETURNING, c.State.INSIDE, c.State.ENTERING, c.State.TO_SLEEP_SPOT]
 	match c.state:
-		c.State.TO_BED, c.State.ON_BED, c.State.SLEEPING_OUTSIDE, c.State.MOVING_IN, c.State.RETURNING, c.State.INSIDE, c.State.ENTERING, c.State.HELPING_CARRY, c.State.TO_WORK, c.State.AT_WORK:
+		c.State.HELPING_CARRY, c.State.TO_WORK, c.State.AT_WORK:
 			drop = true
-		_:
-			drop = clock != null and c.hunger.value < clock.hunger_warn_below
 	release_all(drop)
+	if drop and tools.holding():
+		tools.drop_here("he was taken off his work (%s)" % str(c.State.keys()[c.state]))
+	# Going to bed (or to a meal) with something still in his hands is not a reason to leave it at the work site: the tool goes back into a toolbox, anything else
+	# is put down beside his house, and it is said loudly so that nothing is ever lost quietly. (The ready-for-bed walk empties his hands first; this is the safety net.)
+	if c.state in asleep_states:
+		put_away_for_sleep_now("interrupted by sleep in state %s" % str(c.State.keys()[c.state]))
+
+# What is in his hands goes away at once for a sleep: a tool into a toolbox (else beside his house), a carried thing into a crate / Storage when one has room, else beside
+# his house. A debug line says what it was and where it went.
+func put_away_for_sleep_now(why: String) -> void:
+	if tools.holding():
+		var tool_name: String = String(tools.held)
+		tools.return_instantly()
+		print("SLEEP: %s put the %s away (%s)" % [c.display_name, tool_name, why])
+	if dragger.is_dragging():
+		dragger.drop()
+	if not carrying.is_empty():
+		var kind: StringName = carrying.get("kind", &"")
+		if not _store_carried_now():
+			set_down_near_house()
+		print("SLEEP: %s put the %s away (%s)" % [c.display_name, kind, why])
+
+# A carried thing into the place it belongs, without walking: Storage for a plank, a crate for an item. False if none has room.
+func _store_carried_now() -> bool:
+	var kind: StringName = carrying.get("kind", &"")
+	var tree: SceneTree = get_tree()
+	if kind == &"plank":
+		var dest: Dictionary = Logistics.plank_destination(tree, c.position)
+		if not dest.is_empty() and dest["node"].add_planks(1) > 0:
+			clear_carry()
+			return true
+		return false
+	if Items.is_item(kind):
+		var idest: Dictionary = Logistics.item_destination(tree, kind, c.position)
+		if not idest.is_empty():
+			var crate: Node2D = idest["node"]
+			var ok: bool = crate.add_bag(int(carrying.get("amount", 0))) if kind == &"seed_bag" else crate.add_item(kind, 1) > 0
+			if ok:
+				clear_carry()
+				return true
+	return false
+
+# A free spot beside his house, off its door.
+func near_house_spot() -> Vector2:
+	var base: Vector2 = c.position
+	var door: Vector2 = Vector2.INF
+	if c.home != null and is_instance_valid(c.home):
+		door = c.home.door_position()
+		base = door + Vector2(28, 22)
+	var spot: Vector2 = load("res://scripts/ground_placement.gd").find_free_ground_near(get_tree(), base, Vector2(14, 10))
+	if spot == Vector2.INF:
+		spot = base.round()
+	if door != Vector2.INF and spot.distance_to(door) < 16.0:
+		spot = (door + Vector2(30, 24)).round()
+	return spot
+
+# Whatever he carries (a thing or a tool) is put down on the free ground beside his house.
+func set_down_near_house() -> void:
+	var spot: Vector2 = near_house_spot()
+	if tools.holding():
+		tools.drop(spot, true)
+	if not carrying.is_empty():
+		drop_carry(true, spot)
+
+# At once, for the sleep skip: the job lets go of its claims, nothing is left in his hands (a tool into the toolbox, a thing into storage or beside the house).
+func prepare_instantly() -> void:
+	sleepy = false
+	if work_job != null:
+		work_job.release()
+		work_job = null
+	if assist_cook != null:
+		assist_cook.release()
+		assist_cook = null
+	release_all(false, false)
+	put_away_for_sleep_now("the sleep skip")
+
+# What the job says it does, and where when that is inside a building ("Hauling planks in the House"; the Build job words it itself).
+func _job_status(j) -> String:
+	var text: String = j.describe()
+	var host = j.location()
+	if host != null and is_instance_valid(host) and not text.contains(" in the "):
+		text += " in the %s" % Logistics.host_name(host)
+	return text
 
 func _now() -> float:
 	return Time.get_ticks_msec() / 1000.0
 
+# debug_job_log: once a second, one line with his stance, roles, tasks, the job he has, what he holds, and why each candidate job is not possible.
+func debug_tick(delta: float) -> void:
+	if not (debug_job_log or (c.colony != null and c.colony.debug_job_log)):
+		return
+	_debug_left -= delta
+	if _debug_left > 0.0:
+		return
+	_debug_left = 1.0
+	var roles_text: String = ", ".join(c.orders.roles.map(func(r: StringName) -> String: return String(r)))
+	print("JOBLOG %s: stance=%s roles=[%s] tasks=[%s] state=%s job=%s holding=%s carrying=%s | %s" % [c.display_name, c.orders.name_now(), roles_text, c.orders.tasks_text(), str(c.State.keys()[c.state]), work_job.describe() if work_job != null else "none", String(tools.held), str(carrying.get("kind", &"")), " | ".join(WorkJobsScript.explain(c))])
+
 # --- Every frame ----------------------------------------------------------------------------------------------------------
 
+# Called every frame by the colonist who wants to sleep: true once he is ready to leave for his bed (see GETTING READY FOR BED above).
+func ready_for_bed() -> bool:
+	if not sleepy:
+		sleepy = true
+		_sleepy_time = 0.0
+		_sleepy_strikes = strikes
+	return work_job == null and assist_cook == null and not tools.holding() and carrying.is_empty() and not dragger.is_dragging() and not tools.reserving()
+
+func _sleepy_step(delta: float) -> void:
+	_sleepy_time += delta
+	status = "Getting ready for bed"
+	# 1. the job in hand: the swing finishes, a delivery goes on; then the job lets go (its claims go, its target is free for others)
+	if assist_cook != null:
+		assist_cook.release()
+		assist_cook = null
+	if work_job != null and not work_job.is_return:
+		var delivering: bool = dragger.is_dragging() or not carrying.is_empty()
+		var in_swing: bool = _prev_working and strikes == _sleepy_strikes
+		if (delivering and _sleepy_time < SLEEPY_CARRY_SECONDS) or (in_swing and _sleepy_time < SLEEPY_SWING_SECONDS):
+			status = _job_status(work_job)
+			if work_job.execute(c, delta) or work_job.failed:
+				work_job.release()
+				work_job = null
+				waypoints_reset()
+			return
+		work_job.release()
+		work_job = null
+		waypoints_reset()
+	# 2. what is still in his hands
+	if work_job == null and _sleepy_time < SLEEPY_MAX_SECONDS:
+		if tools.holding():
+			tools.force_return = true
+			tools.recall_after_strikes = -1
+			var rj = WorkJobsScript.ReturnToolJob.new()
+			rj.setup(c, {}, &"")
+			rj.claim(c)
+			work_job = rj
+		elif dragger.is_dragging():
+			dragger.drop()
+		elif not carrying.is_empty():
+			var cj = WorkJobsScript.CarryJob.new()
+			cj.setup(c, {}, &"")
+			if cj.claim(c):
+				work_job = cj
+	if work_job != null:
+		status = _job_status(work_job)
+		if work_job.execute(c, delta) or work_job.failed:
+			work_job.release()
+			work_job = null
+			waypoints_reset()
+	# 3. out of time, or nowhere for it to go: beside his house, off the door
+	if (tools.holding() or not carrying.is_empty()) and (_sleepy_time >= SLEEPY_MAX_SECONDS or (work_job == null and _sleepy_time > 1.0)):
+		if work_job != null:
+			work_job.release()
+			work_job = null
+		print("SLEEP: %s could not take what he holds to its place in time: set down beside his house" % c.display_name)
+		set_down_near_house()
+	if dragger.is_dragging() and work_job == null:
+		dragger.drop()
+
 func tick(delta: float) -> void:
+	_prev_working = working
 	working = false
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	if player == null or player.dead:
 		status = "Waiting"
 		c.play("idle")
 		return
+	if sleepy:
+		_sleepy_step(delta)
+		return
+	# A job never starts while he holds a tool that is not its own (a hammer when the job is sawing, an axe when it is hauling): the tool goes back first, then
+	# the job is picked again.
+	if work_job != null and not work_job.is_return and not work_job.start_checked:
+		work_job.start_checked = true
+		if tools.holding() and tools.held != work_job.primary_tool():
+			tools.force_return = true
+			tools.recall_after_strikes = -1
+	# A tool he no longer needs (or has been asked for) goes back to the toolbox first, whatever his stance.
+	if work_job == null or not work_job.is_return:
+		if tools.wants_return():
+			if work_job != null:
+				work_job.release()
+				work_job = null
+			var rj = WorkJobsScript.ReturnToolJob.new()
+			rj.setup(c, {}, &"")
+			rj.claim(c)
+			work_job = rj
+	if work_job != null and work_job.is_return:
+		status = _job_status(work_job)
+		if work_job.execute(c, delta) or work_job.failed:
+			work_job.release()
+			work_job = null
+			_next_pick = 0.0
+			waypoints_reset()
+		return
 	# (3) designated tasks and roles (work_jobs.gd, through the job board). Following and assisting pause them (the player has him with him);
 	# with Free time or Stay he does them first, and goes back to his stance when there is nothing left.
 	if not work_allowed():
-		if work_job != null or not carrying.is_empty() or dragger.is_dragging():
+		if work_job != null or (assist_cook == null and (not carrying.is_empty() or dragger.is_dragging())):
 			release_all(true)
 	else:
+		# a tool he was waiting for is there now: the job in hand (unless he carries something) gives way, and the pick comes round at once
+		if work_job != null and _now() >= _preempt_check:
+			_preempt_check = _now() + 1.0
+			if tools.unblocked_now() and not dragger.is_dragging() and carrying.is_empty() and work_job.get("phase") != "saw":
+				work_job.release()
+				work_job = null
+				_next_pick = 0.0
+				waypoints_reset()
 		if work_job == null and _now() >= _next_pick and c.colony != null and c.colony.job_board != null:
 			_next_pick = _now() + 0.6
 			work_job = c.colony.job_board.pick_for(c)
 		if work_job != null:
-			status = work_job.describe()
+			status = _job_status(work_job)
 			if work_job.execute(c, delta) or work_job.failed:
 				work_job.release()
 				work_job = null
 				_next_pick = 0.0
 				waypoints_reset()
-				_return_tool()
+			return
+		# nothing more to do in the building he works in: out through its door (a next job in the same room was taken above, without leaving)
+		if _leave_room_step(delta):
 			return
 		if c.orders.stance == c.Orders.Stance.FREE:
 			# nothing to do: free time again (try_take_work asks again soon)
@@ -178,10 +426,11 @@ func is_skipped(node) -> bool:
 	return false
 
 # He cannot do his job: the reason is on his hover line for a while and said once on the HUD (the same reason is not repeated for a minute).
-func fail(key: String, text: String) -> void:
+func fail(key: String, text: String, say: bool = true) -> void:
 	fail_text = text
 	fail_until = _now() + 10.0
-	_say_once(text, key, 60.0)
+	if say:
+		_say_once(text, key, 60.0)
 
 # A task list is finished: "Done chopping." on the HUD and on his hover line.
 func report(text: String) -> void:
@@ -193,8 +442,13 @@ func report(text: String) -> void:
 	if hud != null:
 		hud.say("%s: %s" % [c.display_name, text])
 
+# He takes `kind` into his hands. Never on top of something else: the job frees his hands first (free_hands). If one did not, it is reported and what he
+# held is put down here, so nothing is ever held twice, lost or doubled.
 func set_carry(kind: StringName, amount: int = 1) -> void:
-	carrying = {"kind": kind, "amount": amount}
+	if not hands.pick_up(kind, amount, false):
+		CharacterHands.report("%s took '%s' with his hands full (%s)" % [c.display_name, kind, held_name()])
+		_put_everything_down()
+		hands.pick_up(kind, amount, false)
 	if carry_sprite == null:
 		carry_sprite = Sprite2D.new()
 		carry_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -206,61 +460,237 @@ func set_carry(kind: StringName, amount: int = 1) -> void:
 		tex = load("res://sprites/one_plank.png")
 	elif Items.is_item(kind):
 		tex = Items.texture(kind)
+	elif kind == &"saw_blade":
+		tex = load("res://sprites/saw_blade.png")
 	carry_sprite.texture = tex
-	carry_sprite.visible = tex != null
+	refresh_overlay()
 
+# What is in his hands, for messages: "the axe", "a plank", "a log" or "nothing".
+func held_name() -> String:
+	if tools.holding():
+		return "the %s" % String(tools.held).replace("_", " ")
+	if not carrying.is_empty():
+		return "a %s" % String(carrying["kind"]).replace("_", " ")
+	if dragger.is_dragging():
+		return "a log"
+	return "nothing"
+
+# (A bug if it is ever needed: whatever he holds goes on the ground here.)
+func _put_everything_down() -> void:
+	if tools.holding():
+		tools.drop_here()
+	if not carrying.is_empty():
+		drop_carry()
+
+# The carried item leaves his hands (delivered, stored). A tool is not touched.
 func clear_carry() -> void:
-	carrying = {}
+	if not hands.as_tool:
+		hands.clear()
 	if carry_sprite != null:
 		carry_sprite.visible = false
 
-# Sets what he carries down where he stands (the nearest free ground).
-func drop_carry() -> void:
-	if carrying.is_empty():
+# The picture of the carried item above his head: shown only when the animation playing does not already show the item in his arms (the shared rule,
+# CharacterAnimator.needs_overlay). Called the moment the item or the animation changes, so the item is never drawn twice, not even for a frame.
+func refresh_overlay() -> void:
+	if carry_sprite == null:
 		return
+	carry_sprite.visible = carry_sprite.texture != null and not carrying.is_empty() and CharacterAnimator.needs_overlay(c.animation, c.carried_state())
+
+# Sets what he carries down where he stands (the nearest free ground; a plank joins a stack there). With `force` false and no free ground anywhere near,
+# it stays in his hands, "Hands full" is said (once) and this returns false.
+func drop_carry(force: bool = true, at: Vector2 = Vector2.INF) -> bool:
+	if carrying.is_empty():
+		return true
 	var kind: StringName = carrying.get("kind", &"")
 	var amount: int = int(carrying.get("amount", 0))
 	var tree: SceneTree = get_tree()
 	var parent: Node = c.get_parent()
-	var spot: Vector2 = load("res://scripts/ground_placement.gd").find_free_ground_near(tree, c.position, Vector2(12, 10))
+	var spot: Vector2 = load("res://scripts/ground_placement.gd").find_free_ground_near(tree, c.position if at == Vector2.INF else at, Vector2(12, 10))
 	if spot == Vector2.INF:
+		if not force:
+			fail("hands_full", "Hands full")
+			return false
 		spot = c.position.round()
 	if kind == &"plank":
 		PlankPiles.put_plank(tree, parent, spot, 20.0, Rect2(0, 0, 640, 640), spot)
 	elif Items.is_item(kind):
 		Items.spawn(kind, parent, spot, amount)
+	elif kind == &"saw_blade":
+		PlankPiles.spawn_blade(parent, spot)
 	clear_carry()
+	return true
+
+# His hands must be empty before he picks anything up (a tool, a plank, a log, the blade): the tool goes back into the toolbox (ColonistTools.put_away: the
+# box it came from, else the nearest, else beside it), a carried item is set down on free ground (a plank joins the stack there), a dragged log is left
+# lying. 1 = his hands are free, 0 = he is putting it away, -1 = there is nowhere to put it ("Hands full", said once; the job waits). `who` is the job
+# (it needs walk(), unreachable and new_target()).
+func free_hands(who, delta: float) -> int:
+	if dragger.is_dragging():
+		dragger.drop()
+	if tools.holding():
+		return 1 if tools.put_away(who, delta) else 0
+	if not carrying.is_empty():
+		return 1 if drop_carry(false) else -1
+	return 1
 
 # --- Moving ---------------------------------------------------------------------------------------------------------------
 
+# The AI as the walker of an Assist copy (the work jobs bring their own): same walk / unreachable / new_target as a WorkJob.
+func new_target() -> void:
+	_stuck_base = stuck_events
+	unreachable = false
+	waypoints_reset()
+
+func walk(point: Vector2, delta: float, mult: float = 1.0) -> bool:
+	var arrived: bool = go(point, delta, mult)
+	if stuck_events - _stuck_base >= 3:
+		unreachable = true
+	return arrived
+
 func waypoints_reset() -> void:
-	c.waypoints.clear()
+	if c.state == c.State.ORDERED:
+		c.waypoints.clear()
 	_replan = 0.0
+	door_blocked = false
 	c._reset_stuck()
 
-# One step along a path to `point`; true once he is there. `mult` is relative to his own (tired / wading) speed.
+# --- Through the doors ------------------------------------------------------------------------------------------------------
+
+# The room he really stands in (null outdoors).
+func room_here() -> Node2D:
+	if not BuildingInterior.is_interior_point(c.position):
+		return null
+	return BuildingInterior.room_at(get_tree(), c.position)
+
+func _room_at(point: Vector2) -> Node2D:
+	if not BuildingInterior.is_interior_point(point):
+		return null
+	return BuildingInterior.room_at(get_tree(), point)
+
+# One step along a path to `point`; true once he is there. `mult` is relative to his own (tired / wading) speed. The point may be in a
+# room of a building: then he walks to that building's door, goes in the way the eaters and sleepers do (the door sound; seen coming in
+# when the player is in that room) and walks on inside; and from a room to anywhere else he walks to the room's exit first and comes out
+# at the door. A log being dragged does not go through a door.
 func go(point: Vector2, delta: float, mult: float = 1.0) -> bool:
+	var here: Node2D = room_here()
+	var there: Node2D = _room_at(point)
+	if here != there:
+		_through_door(here, there, delta, mult)
+		return false
+	return _go_local(point, delta, mult)
+
+func _through_door(here: Node2D, there: Node2D, delta: float, mult: float) -> void:
+	if here != null:
+		if _go_local(here.exit_point_world(), delta, mult):
+			_exit_room(here)
+		return
+	var host = there.building
+	if host == null or not is_instance_valid(host):
+		stuck_events += 3
+		return
+	if dragger.is_dragging():
+		if not door_blocked:
+			door_blocked = true
+			stuck_events += 3
+		return
+	if _go_local(host.door_position(), delta, mult):
+		_enter_room(there)
+
+# Through the door in: he is at the room's door (seen walking in when the player is in that room, else out of sight).
+func _enter_room(room: Node2D) -> void:
+	var host = room.building
+	AudioManager.play("door", host.door_position(), 1.0, -4.0)
+	c.position = room.door_world()
+	inside_room = room
+	room_entries += 1
+	var seen: bool = room.player_inside
+	c.set_body_visible(&"room", seen)
+	c.in_room = seen
+	if seen and not room.shown.has(c):
+		room.shown.append(c)
+	c.play("idle")
+	waypoints_reset()
+
+# Through the door out: at the building's door, visible, the room forgets him.
+func _exit_room(room: Node2D) -> void:
+	inside_room = null
+	if room != null and is_instance_valid(room):
+		room.shown.erase(c)
+		var host = room.building
+		if host != null and is_instance_valid(host):
+			c.position = host.door_position() + Vector2(0, 3)
+			AudioManager.play("door", c.position, 1.0, -4.0)
+			if visiting == host:
+				visiting = null
+	c.in_room = false
+	c.set_body_visible(&"*", true)
+	c.play("idle")
+	waypoints_reset()
+
+# Out of the room at once (a need, a stance, death): at the door outside.
+func leave_room_now() -> void:
+	if visiting != null:
+		_leave_visit()
+	var here: Node2D = room_here()
+	if here == null and inside_room != null and is_instance_valid(inside_room):
+		here = inside_room
+	if here != null:
+		_exit_room(here)
+	inside_room = null
+
+# He is in a room only for his work (or following the player in): with nothing left to do there he walks out. True while he does.
+func _leave_room_step(delta: float) -> bool:
+	var here: Node2D = room_here()
+	if here == null:
+		inside_room = null
+		return false
+	if visiting != null:
+		return false
+	status = "Leaving the %s" % Logistics.host_name(here.building).to_lower()
+	if _go_local(here.exit_point_world(), delta, 1.0):
+		_exit_room(here)
+	return true
+
+# The room his building had has gone (it was taken down): he is put out at `door`.
+func on_room_closed(door: Vector2) -> void:
+	inside_room = null
+	if visiting != null:
+		visiting = null
+	release_all(true, false)
+	c.position = door + Vector2(0, 8)
+	c.set_body_visible(&"*", true)
+	c.in_room = false
+	waypoints_reset()
+
+func _go_local(point: Vector2, delta: float, mult: float = 1.0) -> bool:
 	_replan -= delta
 	if _replan <= 0.0 or c.waypoints.is_empty():
 		_replan = 0.5
 		c.waypoints = c._path_to(point)
+		# (The walls of a room are not obstacles: the places a path turns at are kept on the floor.)
+		var floor_room: Node2D = room_here()
+		if floor_room != null:
+			for i in c.waypoints.size():
+				c.waypoints[i] = floor_room.clamp_walk(c.waypoints[i])
 		c._reset_stuck()
 	if c.waypoints.is_empty():
 		return true
-	if c.animation != &"walk":
-		c.play("walk")
+	c.pose_walk()
 	var arrived: bool = c._follow_path(delta, mult)
 	if c._is_stuck(delta):
 		# Stuck behind something: plan again, and a little to the side.
 		stuck_events += 1
 		c.waypoints = c._path_to(point + Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0)))
+		var floor_room2: Node2D = room_here()
+		if floor_room2 != null:
+			for i in c.waypoints.size():
+				c.waypoints[i] = floor_room2.clamp_walk(c.waypoints[i])
 		c._reset_stuck()
 	return arrived
 
 func _stand() -> void:
 	c.waypoints.clear()
-	if c.animation != &"idle":
-		c.play("idle")
+	c.pose_idle()
 
 func _near_door(p: Vector2) -> bool:
 	var bm: Node = get_tree().get_first_node_in_group("build_mode")
@@ -277,8 +707,8 @@ func _follow(delta: float, player: Node2D) -> void:
 	if player.inside_building != null:
 		_visit(delta, player)
 		return
-	if visiting != null:
-		_leave_visit()
+	if visiting != null or inside_room != null or room_here() != null:
+		leave_room_now()
 	var col: Node = c.colony
 	var pp: Vector2 = player.global_position
 	var d: float = c.position.distance_to(pp)
@@ -315,8 +745,7 @@ func _follow(delta: float, player: Node2D) -> void:
 	# slowed by tiredness: never faster than he walks
 	if player.rest.speed_factor() < 1.0:
 		mult = minf(mult, maxf(0.3, pspeed / base))
-	if c.animation != &"walk":
-		c.play("walk")
+	c.pose_walk()
 	c._follow_path(delta, mult)
 	if c._is_stuck(delta):
 		c.waypoints = c._path_to(_follow_target(pp, true))
@@ -341,11 +770,18 @@ func _visit(delta: float, player: Node2D) -> void:
 	var b: Node2D = player.inside_building
 	if visiting != null and visiting != b:
 		_leave_visit()
+	if visiting == null and room_here() != null:
+		if room_here().building == b:
+			# (already in this room for his work: he stays, as a visitor now)
+			visiting = b
+			inside_room = b.get_interior()
+		else:
+			leave_room_now()
 	if visiting == null:
 		var door: Vector2 = b.door_position()
 		status = "Following you in"
 		if c.position.distance_to(door) > 6.0:
-			c.visible = true
+			c.set_body_visible(&"*", true)
 			go(door, delta, c.colony.follow_catchup_multiplier)
 			return
 		var room: Node2D = b.get_interior()
@@ -354,6 +790,7 @@ func _visit(delta: float, player: Node2D) -> void:
 			_stand()
 			return
 		visiting = b
+		inside_room = b.get_interior()
 		c.waypoints.clear()
 	status = "Waiting inside"
 	if not player.transitioning and not c.in_room and is_instance_valid(visiting):
@@ -365,8 +802,9 @@ func _leave_visit() -> void:
 		return
 	var b: Node2D = visiting
 	visiting = null
+	inside_room = null
 	c.in_room = false
-	c.visible = true
+	c.set_body_visible(&"*", true)
 	if is_instance_valid(b):
 		var room: Node2D = b.get_interior()
 		room.shown.erase(c)
@@ -421,18 +859,46 @@ func _stay(delta: float) -> void:
 func _assist(delta: float, player: Node2D) -> bool:
 	var log: Dictionary = player.work_log
 	var recent: bool = _now() - float(log["at"]) <= c.colony.assist_idle_seconds
+	# the Cook's chain: the step in hand is finished even when my work has stopped; a new one is taken only while I work
+	if assist_cook != null:
+		return _run_assist_cook(delta)
+	if recent and log["kind"] == &"cook" and job.is_empty():
+		assist_cook = load("res://scripts/cook_jobs.gd").pick(c)
+		if assist_cook != null:
+			return _run_assist_cook(delta)
+		return false
 	if not job.is_empty():
 		if not recent:
 			_end_job()
 			return false
+		# a job in a room lasts while I am in that room
+		var job_room: Node2D = _room_at(job.get("spot", Vector2.ZERO))
+		if job_room != null and player.inside_building != job_room.building:
+			_end_job()
+			return false
 		return _run_job(delta, player)
-	if not recent and _tool != &"":
-		_return_tool()
-	if not recent or player.inside_building != null:
+	if not recent:
+		return false
+	# In a house with me he copies only the hammering of a blueprint in that very room (the rest of the copied work is outdoors); and out of
+	# doors he does not run in to a blueprint I hammered inside.
+	var target = log["target"]
+	var target_room: Node2D = _room_at(target.global_position) if target != null and is_instance_valid(target) and target is Node2D else null
+	if player.inside_building != null:
+		if log["kind"] != &"hammer" or target_room == null or target_room.building != player.inside_building:
+			return false
+	elif target_room != null:
 		return false
 	if not _pick_job(player, log):
 		return false
 	return _run_job(delta, player)
+
+func _run_assist_cook(delta: float) -> bool:
+	status = _job_status(assist_cook)
+	if assist_cook.execute(c, delta) or assist_cook.failed:
+		assist_cook.release()
+		assist_cook = null
+		waypoints_reset()
+	return true
 
 func _plots() -> Node2D:
 	return load("res://scripts/plot_manager.gd").get_for(get_tree())
@@ -456,7 +922,7 @@ func _pick_job(player: Node2D, log: Dictionary) -> bool:
 				if d < best_d:
 					best_d = d
 					best = t
-			if best == null or not _tool_ok(kind):
+			if best == null or not tools.can_start(WorkActions.tool_of(kind)):
 				return false
 			if not best.try_claim(c):
 				return false
@@ -465,12 +931,18 @@ func _pick_job(player: Node2D, log: Dictionary) -> bool:
 			job = {"kind": kind, "target": best, "side": side, "spot": Vector2(best.position.x - side * offs.x, best.position.y + offs.y).round()}
 		&"hammer":
 			var b = log["target"]
-			if b == null or not is_instance_valid(b) or not b.is_in_group("buildings") or b.state == b.State.BUILT or not b.is_supplied() or not _tool_ok(kind):
+			if b == null or not is_instance_valid(b) or not b.is_in_group("buildings") or b.is_finished() or not b.is_supplied() or not tools.can_start(WorkActions.tool_of(kind)):
 				return false
 			# (The player holds the claim: he works the same blueprint from its other side, without one of his own.)
 			var hs: Vector2 = b.hammer_spot_world()
 			var mirrored: Vector2 = Vector2(2.0 * b.global_position.x - hs.x, hs.y).round()
 			var spot: Vector2 = mirrored if c._can_stand_at(mirrored) else hs + Vector2(0, 10)
+			var b_room: Node2D = _room_at(b.global_position)
+			if b_room != null:
+				# (In a room: a place on the floor, reachable from the door and not the one I stand on.)
+				spot = b_room.standing_spot(Logistics.cover_rect(get_tree(), b), mirrored, [player.global_position])
+				if spot == Vector2.INF:
+					return false
 			job = {"kind": kind, "target": b, "side": 1.0 if spot.x < b.global_position.x else -1.0, "spot": spot}
 		&"pull":
 			var best_p: Node2D = null
@@ -495,6 +967,12 @@ func _pick_job(player: Node2D, log: Dictionary) -> bool:
 	job["phase"] = "walk"
 	_prepare_tool(job)
 	return true
+
+# An Assist copy that needs a tool he does not hold starts by fetching it.
+func _prepare_tool(j: Dictionary) -> void:
+	var tool: StringName = WorkActions.tool_of(j["kind"])
+	if c.colony.friend_needs_tools and tool != &"" and not tools.held == tool:
+		j["phase"] = "fetch"
 
 func _pick_plot_job(player: Node2D, log: Dictionary) -> bool:
 	var m: Node2D = _plots()
@@ -537,7 +1015,7 @@ func _pick_plot_job(player: Node2D, log: Dictionary) -> bool:
 				best_d = d
 				best = cell
 				found = true
-		if found and _tool_ok(want) and m.claim_cell(best, c):
+		if found and tools.can_start(WorkActions.tool_of(want)) and m.claim_cell(best, c):
 			var centre2: Vector2 = m.cell_center(best)
 			var spot: Vector2 = (centre2 + Vector2(-11, 6)).round()
 			if not c._can_stand_at(spot):
@@ -554,7 +1032,7 @@ func _job_valid() -> bool:
 			return is_instance_valid(t) and t.claimed_by == c and ((job["kind"] == &"chop" and t.is_standing()) or (job["kind"] == &"delimb" and t.is_felled()))
 		&"hammer":
 			var b = job["target"]
-			return is_instance_valid(b) and b.state != b.State.BUILT and b.is_supplied()
+			return is_instance_valid(b) and not b.is_finished() and b.is_supplied()
 		&"pull":
 			var p = job["target"]
 			return is_instance_valid(p) and p.is_tall() and p.claimed_by == c
@@ -597,20 +1075,15 @@ func _run_job(delta: float, player: Node2D) -> bool:
 	status = _describe_job()
 	match job["phase"]:
 		"fetch":
-			status = "Fetching the %s" % String(_tool_needed(job["kind"]))
-			if _tool_box == null or not is_instance_valid(_tool_box):
+			var tool: StringName = WorkActions.tool_of(job["kind"])
+			status = "Fetching the %s" % String(tool)
+			var tk: int = tools.ensure(self, tool, delta)
+			if tk == 1:
+				job["phase"] = "walk"
+				new_target()
+			elif tk < 0:
 				_end_job()
 				return false
-			if go(_tool_box.interact_point(), delta, 1.0) or c.position.distance_to(_tool_box.interact_point()) < 10.0:
-				var idx: int = _tool_box.kinds().find(_tool_needed(job["kind"]))
-				if idx < 0:
-					_say_once("No %s available" % String(_tool_needed(job["kind"])))
-					_end_job()
-					return false
-				_tool_box.take_item(idx)
-				_tool = _tool_needed(job["kind"])
-				job["phase"] = "walk"
-				_replan = 0.0
 			return true
 		"walk":
 			if go(job["spot"], delta, 1.0):
@@ -621,15 +1094,10 @@ func _run_job(delta: float, player: Node2D) -> bool:
 			return true
 		_:
 			working = true
-			if c.animation != &"idle":
-				c.play("idle")
 			_face(job)
-			_timer -= delta
-			if _timer > 0.0:
-				return true
-			_strike(player)
-			if not job.is_empty():
-				_timer = _interval(player)
+			# the work animation runs for the whole action and the hit comes at its strike frame
+			if c.animator.work_cycle(job["kind"], delta, _interval(player), c.carry_state()):
+				_strike(player)
 			return true
 
 func _face(j: Dictionary) -> void:
@@ -663,7 +1131,9 @@ func _strike(player: Node2D) -> void:
 		&"harvest":
 			WorkActions.harvest(st, _plots(), job["cell"], c.get_parent(), player.map_rect)
 			finished = true
-	c.work_bob()
+	strikes += 1
+	if WorkActions.tool_of(job["kind"]) != &"":
+		tools.touch()
 	if finished:
 		_end_job()
 
@@ -678,63 +1148,9 @@ func _end_job() -> void:
 				_plots().release_cell(job["cell"], c)
 		job = {}
 	working = false
-	c.waypoints.clear()
-
-# For the work jobs: does he hold this tool (taken from the toolbox), the toolbox to fetch it from, and taking it.
-func has_tool(tool: StringName) -> bool:
-	return _tool == tool
-
-func toolbox_node() -> Node2D:
-	return _toolbox()
-
-func take_tool(tool: StringName) -> bool:
-	var box: Node2D = _toolbox()
-	if box == null:
-		return false
-	var idx: int = box.kinds().find(tool)
-	if idx < 0:
-		return false
-	box.take_item(idx)
-	_tool = tool
-	_tool_box = box
-	return true
-
-# --- Tools (friend_needs_tools; off by default) ---------------------------------------------------------------------------------
-
-func _tool_needed(kind: StringName) -> StringName:
-	return WorkActions.TOOL_OF.get(kind, &"")
-
-func _toolbox() -> Node2D:
-	for box in get_tree().get_nodes_in_group("toolboxes"):
-		if not box.is_carried():
-			return box
-	return null
-
-# May he do this work: with friend_needs_tools off always; on, the tool must be in the toolbox (he fetches it), else the message.
-func _tool_ok(kind: StringName) -> bool:
-	if not c.colony.friend_needs_tools:
-		return true
-	var tool: StringName = _tool_needed(kind)
-	if tool == &"" or _tool == tool:
-		return true
-	var box: Node2D = _toolbox()
-	if box == null or not box.kinds().has(tool):
-		_say_once("No %s available" % String(tool))
-		return false
-	return true
-
-func _prepare_tool(j: Dictionary) -> void:
-	if c.colony.friend_needs_tools and _tool_needed(j["kind"]) != &"" and _tool != _tool_needed(j["kind"]):
-		_return_tool()
-		_tool_box = _toolbox()
-		j["phase"] = "fetch"
-
-func _return_tool() -> void:
-	if _tool != &"":
-		var box: Node2D = _tool_box if is_instance_valid(_tool_box) else _toolbox()
-		if box != null:
-			box.add_item(_tool, 0)
-		_tool = &""
+	# (only the walk of the ORDER is cleared: a walk to bed that was set in the same frame belongs to the colonist)
+	if c.state == c.State.ORDERED:
+		c.waypoints.clear()
 
 func _say_once(text: String, key: String = "", cooldown: float = 20.0) -> void:
 	var k: String = key if key != "" else text

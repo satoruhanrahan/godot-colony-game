@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="PaletteList" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/palette_list.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/character_palette.gd" id="2"]
+
+[sub_resource type="Resource" id="Look_0"]
+script = ExtResource("2")
+palette_name = "Rust and slate"
+hat_color = Color(0.658824, 0.270588, 0.180392, 1)
+pants_color = Color(0.239216, 0.270588, 0.321569, 1)
+
+[sub_resource type="Resource" id="Look_1"]
+script = ExtResource("2")
+palette_name = "Mustard and navy"
+hat_color = Color(0.847059, 0.647059, 0.227451, 1)
+pants_color = Color(0.184314, 0.247059, 0.419608, 1)
+
+[sub_resource type="Resource" id="Look_2"]
+script = ExtResource("2")
+palette_name = "Teal and sand"
+hat_color = Color(0.184314, 0.560784, 0.541176, 1)
+pants_color = Color(0.709804, 0.603922, 0.415686, 1)
+
+[sub_resource type="Resource" id="Look_3"]
+script = ExtResource("2")
+palette_name = "Plum and grey"
+hat_color = Color(0.478431, 0.231373, 0.411765, 1)
+pants_color = Color(0.352941, 0.352941, 0.4, 1)
+
+[sub_resource type="Resource" id="Look_4"]
+script = ExtResource("2")
+palette_name = "Ochre and olive"
+hat_color = Color(0.768627, 0.498039, 0.180392, 1)
+pants_color = Color(0.356863, 0.419608, 0.203922, 1)
+
+[sub_resource type="Resource" id="Look_5"]
+script = ExtResource("2")
+palette_name = "Sky and charcoal"
+hat_color = Color(0.356863, 0.607843, 0.835294, 1)
+pants_color = Color(0.227451, 0.227451, 0.258824, 1)
+
+[sub_resource type="Resource" id="Look_6"]
+script = ExtResource("2")
+palette_name = "Rose and aubergine"
+hat_color = Color(0.811765, 0.419608, 0.560784, 1)
+pants_color = Color(0.290196, 0.227451, 0.360784, 1)
+
+[sub_resource type="Resource" id="Look_7"]
+script = ExtResource("2")
+palette_name = "Cream and wine"
+hat_color = Color(0.890196, 0.85098, 0.721569, 1)
+pants_color = Color(0.419608, 0.164706, 0.227451, 1)
+
+[resource]
+script = ExtResource("1")
+; The looks the settlers get. To add one: add an element below in the editor (Palettes) and change its two colours.
+palettes = Array[ExtResource("2")]([SubResource("Look_0"), SubResource("Look_1"), SubResource("Look_2"), SubResource("Look_3"), SubResource("Look_4"), SubResource("Look_5"), SubResource("Look_6"), SubResource("Look_7")])

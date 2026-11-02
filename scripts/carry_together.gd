@@ -76,7 +76,7 @@ func setup(the_box: Node2D, the_player: Node2D, the_friend: Node2D) -> void:
 func start() -> void:
 	name = "CarryTogether"
 	add_to_group("carry_together")
-	Ui.register_closable(Callable(self, "is_active"), Callable(self, "escape"))
+	Ui.register_closable(Callable(self, "is_active"), Callable(self, "escape"), "carrying the toolbox with the friend", Ui.TIER_CARRY)
 	# He stands on the side of the box he comes from.
 	var side: float = -1.0 if friend.global_position.x < box.global_position.x else 1.0
 	_spot = (box.global_position + Vector2(side * 18.0, 1.0)).round()

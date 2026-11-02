@@ -7,6 +7,7 @@ extends RefCounted
 
 const TRUNK_TEXTURE: Texture2D = preload("res://sprites/tree_trunk.png")
 const LogDragger = preload("res://scripts/log_dragger.gd")
+const BuildingInterior = preload("res://scripts/building_interior.gd")
 
 # Where a person stands to hand something to each kind of building (the Hauler's offsets).
 const STORAGE_STOP_OFFSET: Vector2 = Vector2(0, 16)
@@ -111,21 +112,95 @@ static func spawn_storage_log(storage: Node2D, parent: Node) -> Sprite2D:
 	parent.add_child(stored_log)
 	return stored_log
 
-# Blueprints a Builder may work on (outdoors only: the ones in a room are the player's).
+# Everything that can be built lives in one of these groups and answers the same questions (is_blueprint(), is_finished(), planks_needed(),
+# material_missing(), needs_digging() ... see Building and PitSaw): a new kind of buildable only has to do the same, nothing here is special-cased.
+const BUILDABLE_GROUPS: Array[String] = ["buildings", "pit_saws"]
+
+# Blueprints a Builder may work on, of every type: outdoors and in the rooms of buildings (a bed, a crate or a table planned inside a House or a Storage).
 static func blueprints(tree: SceneTree) -> Array:
-	return tree.get_nodes_in_group("buildings").filter(func(b) -> bool: return b.state != b.State.BUILT and b.global_position.x < 2000.0 and b.building_type != null and not b.building_type.indoor_only)
+	var out: Array = []
+	for group in BUILDABLE_GROUPS:
+		for b in tree.get_nodes_in_group(group):
+			if b.has_method("is_blueprint") and b.is_blueprint() and not b.is_queued_for_deletion() and not out.has(b):
+				out.append(b)
+	return out
+
+# The kinds of blueprint the board lists now: {name: count}.
+static func blueprint_types(tree: SceneTree) -> Dictionary:
+	var out: Dictionary = {}
+	for b in blueprints(tree):
+		var n: String = b.display_name()
+		out[n] = int(out.get(n, 0)) + 1
+	return out
+
+# --- Rooms: where a point is, and what the way there costs ----------------------------------------------------------------------------
+
+# The room (BuildingInterior) that holds a world point, or null outdoors.
+static func room_of(tree: SceneTree, point: Vector2) -> Node2D:
+	if not BuildingInterior.is_interior_point(point):
+		return null
+	return BuildingInterior.room_at(tree, point)
+
+# The host building (a House, a Storage) of the room at a point, null outdoors.
+static func host_of(tree: SceneTree, point: Vector2) -> Node2D:
+	var room: Node2D = room_of(tree, point)
+	return room.building if room != null and is_instance_valid(room.building) else null
+
+# "House", "Storage": for the status line ("Building a wooden bed in the House").
+static func host_name(host) -> String:
+	if host != null and is_instance_valid(host):
+		if host.has_method("display_name"):
+			return host.display_name()
+		if "building_type" in host and host.building_type != null:
+			return host.building_type.type_name
+	return "building"
+
+# A walk from `a` to `b` in pixels, counting the way through the doors when they are not in the same place (outdoors / a room).
+# For choosing the nearest of several things; not the exact path.
+static func travel_cost(tree: SceneTree, a: Vector2, b: Vector2) -> float:
+	var ra: Node2D = room_of(tree, a)
+	var rb: Node2D = room_of(tree, b)
+	if ra == rb:
+		return a.distance_to(b)
+	var cost: float = 24.0
+	if ra != null:
+		cost += a.distance_to(ra.exit_point_world())
+		a = ra.building.door_position()
+	if rb != null:
+		cost += a.distance_to(rb.building.door_position()) + rb.door_world().distance_to(b)
+	else:
+		cost += a.distance_to(b)
+	return cost
+
+# The nearest of `nodes` by the walk (through the doors) from `from`.
+static func nearest_by_walk(tree: SceneTree, nodes: Array, from: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_d: float = INF
+	for n in nodes:
+		var d: float = travel_cost(tree, from, n.global_position)
+		if d < best_d:
+			best_d = d
+			best = n
+	return best
+
+# What a blueprint covers on the floor (a flat bed its picture, a solid thing its base).
+static func cover_rect(tree: SceneTree, bp: Node2D) -> Rect2:
+	var bm: Node = tree.get_first_node_in_group("build_mode")
+	if bm != null and bp.building_type != null:
+		return bm.floor_cover(bp.building_type, bp.global_position)
+	return Rect2(bp.global_position + Vector2(-8, -8), Vector2(16, 8))
 
 # Where a plank for a blueprint can come from: {"kind": "storage" / "sawmill" / "pile", "node"} or {}.
 static func plank_source(tree: SceneTree, from: Vector2) -> Dictionary:
 	var piles: Array = free_piles(tree)
-	var pile: Node2D = nearest(piles, from)
-	var store: Node2D = nearest(tree.get_nodes_in_group("storages").filter(func(s) -> bool: return s.planks_stored > 0), from)
-	var mill: Node2D = nearest(tree.get_nodes_in_group("sawmills").filter(func(m) -> bool: return m.planks_ready > 0), from)
+	var pile: Node2D = nearest_by_walk(tree, piles, from)
+	var store: Node2D = nearest_by_walk(tree, tree.get_nodes_in_group("storages").filter(func(s) -> bool: return s.planks_stored > 0), from)
+	var mill: Node2D = nearest_by_walk(tree, tree.get_nodes_in_group("sawmills").filter(func(m) -> bool: return m.planks_ready > 0), from)
 	var best: Dictionary = {}
 	var best_d: float = INF
 	for o in [["pile", pile], ["storage", store], ["sawmill", mill]]:
 		if o[1] != null:
-			var d: float = from.distance_squared_to(o[1].global_position)
+			var d: float = travel_cost(tree, from, o[1].global_position)
 			if d < best_d:
 				best_d = d
 				best = {"kind": o[0], "node": o[1]}
@@ -133,4 +208,7 @@ static func plank_source(tree: SceneTree, from: Vector2) -> Dictionary:
 
 # Where an item of a kind a blueprint needs (a flat stone, a branch) lies: the nearest loose one, or null.
 static func material_source(tree: SceneTree, kind: StringName, from: Vector2) -> Node2D:
-	return nearest(tree.get_nodes_in_group("ground_items").filter(func(i) -> bool: return i.kind == kind and not i.is_queued_for_deletion() and i.get_meta(&"claimed_by", null) == null), from)
+	# (a saw blade is an object of its own, not a ground item)
+	if kind == &"saw_blade":
+		return nearest_by_walk(tree, tree.get_nodes_in_group("saw_blades").filter(func(i) -> bool: return not i.is_queued_for_deletion() and (i.get_meta(&"claimed_by") if i.has_meta(&"claimed_by") else null) == null), from)
+	return nearest_by_walk(tree, tree.get_nodes_in_group("ground_items").filter(func(i) -> bool: return i.kind == kind and not i.is_queued_for_deletion() and (i.get_meta(&"claimed_by") if i.has_meta(&"claimed_by") else null) == null), from)

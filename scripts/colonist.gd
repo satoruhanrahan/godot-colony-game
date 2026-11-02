@@ -38,7 +38,7 @@ const OrdersPanel = preload("res://scripts/orders_panel.gd")
 # HELPING_CARRY: walking to the toolbox, then carrying it with the player (see carry_together.gd, which moves him).
 # TO_BED: walking to a free bed he has reserved.   ON_BED: lying on it (idle frame, a "z"; drawn above the
 #   bed, which is a flat decal on the ground).
-enum State { IDLE, WALKING, MOVING_IN, ENTERING, INSIDE, RETURNING, TO_WORK, AT_WORK, FOLLOWING, SLEEPING_OUTSIDE, TO_BED, ON_BED, TO_BUSH, EATING, TO_CRATE, EATING_CRATE, HELPING_CARRY, ORDERED }
+enum State { IDLE, WALKING, MOVING_IN, ENTERING, INSIDE, RETURNING, TO_WORK, AT_WORK, FOLLOWING, SLEEPING_OUTSIDE, TO_BED, ON_BED, TO_BUSH, EATING, TO_CRATE, EATING_CRATE, HELPING_CARRY, ORDERED, TO_SLEEP_SPOT }
 # Why he sleeps: it is bedtime (until dawn), or he was exhausted (a nap, until nap_wake_energy).
 enum SleepReason { NONE, NIGHT, EXHAUSTED }
 
@@ -95,6 +95,8 @@ const REPLAN_SECONDS: float = 0.5
 var rest: Node
 var sleep_reason: SleepReason = SleepReason.NONE
 var _home_walk_time: float = 0.0
+# How long the walk to his bed or his house may take before he is taken to be stuck: walk_home_timeout, or longer for a long way (at a quarter of his speed, plus a margin: an exhausted colonist is that slow).
+var _walk_budget: float = 25.0
 var _clock: Node
 # The bed he has reserved or is lying on (null: none), the beds he has given up on until he wakes, how
 # long this sleep has lasted and his own running clock (both in clock-seconds), when he may nap outdoors
@@ -122,12 +124,24 @@ var in_room: bool = false
 @export var asleep_offset_on_bed: Vector2 = Vector2.ZERO
 @export var asleep_offset_on_ground: Vector2 = Vector2.ZERO
 @export var asleep_rotation_degrees: float = 0.0
+# His hat and pants colours (res://data/palettes/friend.tres for the friend; the Colony gives every settler an unused one from
+# settler_palettes.tres; with none he picks an unused one himself).
+@export var palette: CharacterPalette = null
+# Picks and plays his animations (the player's CharacterAnimator): walking and standing with what he holds, and the work animations.
+var animator: CharacterAnimator = null
 var _base_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group("colonists")
 	colony = get_tree().get_first_node_in_group("colony")
 	_base_offset = offset
+	animator = CharacterAnimator.new(self, _base_offset)
+	animation_changed.connect(_refresh_overlay)
+	# The player's complete set of animations (his own idle / walk / asleep art laid over it) in the colours of his palette.
+	sprite_frames = ColonistFrames.get_frames()
+	if palette == null:
+		palette = PaletteList.unused_palette(get_tree(), self)
+	PaletteSwap.apply(self, palette)
 	SleepVisual.ensure(self, "res://sprites/colonist_asleep.png")
 	play("idle")
 	timer = _random_idle_time()
@@ -195,14 +209,21 @@ func _process(delta: float) -> void:
 		_time += clock_now.clock_delta
 		if is_asleep():
 			_nap_seconds += clock_now.clock_delta
+	# The Orders panel is open: he stands still, facing me, until it closes. Nothing he holds or claims is given up and his job, his path and his
+	# timers stay as they were; only HE is held (the world, the clock and his meters go on).
+	if orders_panel != null and orders_panel.is_open and _hold_for_panel():
+		return
 	# A house that has gone away leaves him unhoused.
 	if home != null and not is_instance_valid(home):
 		become_unhoused()
 	if _scheduled():
 		_schedule_tick()
 	# With a stance he is not "free": every way out of a need or a task lands in IDLE / WALKING / FOLLOWING, and he takes up his order again.
-	# (A colonist with roles or tasks is "ordered" too while there is work for him: try_take_work asks the job board.)
-	if (state == State.IDLE or state == State.WALKING or state == State.FOLLOWING) and (orders.stance != Orders.Stance.FREE or order_ai.try_take_work()):
+	order_ai.tools.tick_idle(delta)
+	order_ai.debug_tick(delta)
+	# (A colonist with roles or tasks is "ordered" too while there is work for him: try_take_work asks the job board; one holding a tool that
+	# has to go back is ordered until it is back.)
+	if (state == State.IDLE or state == State.WALKING or state == State.FOLLOWING) and (orders.stance != Orders.Stance.FREE or order_ai.sleepy or order_ai.tools.wants_return() or order_ai.try_take_work()):
 		order_ai.begin()
 		state = State.ORDERED
 	# A free colonist who is too far from the MainCharacter stops and goes after him.
@@ -244,8 +265,15 @@ func _process(delta: float) -> void:
 			_home_walk_time += delta
 			if _follow_path(delta):
 				_begin_entering()
-			elif _is_stuck(delta) or _home_walk_time > walk_home_timeout:
+			elif _is_stuck(delta) or _home_walk_time > _walk_budget:
 				_replan_home()
+		State.TO_SLEEP_SPOT:
+			_home_walk_time += delta
+			if _follow_path(delta):
+				_sleep_outside()
+			elif _is_stuck(delta) or _home_walk_time > walk_home_timeout / maxf(0.1, rest.efficiency()):
+				waypoints.clear()
+				_sleep_outside()
 		State.TO_BED:
 			_home_walk_time += delta
 			if not _bed_still_mine():
@@ -254,7 +282,7 @@ func _process(delta: float) -> void:
 				_start_sleep_routine()
 			elif _follow_path(delta):
 				_arrive_at_bed()
-			elif _is_stuck(delta) or _home_walk_time > walk_home_timeout / maxf(0.1, rest.efficiency()):
+			elif _is_stuck(delta) or _home_walk_time > _walk_budget / maxf(0.1, rest.efficiency()):
 				# Cannot get there: give up on this bed.
 				_bed_avoid.append(bed)
 				_forget_bed()
@@ -277,6 +305,28 @@ func _process(delta: float) -> void:
 		State.HELPING_CARRY:
 			# (moved by the CarryTogether that owns him)
 			pass
+	# His picture follows what he does and holds: a work animation only while he swings, else the walk / idle picture for what is in his hands.
+	if animator.in_work and (state != State.ORDERED or not order_ai.working):
+		animator.end_work()
+		# (the work picture goes: back to standing with what he holds; the walk comes when he moves)
+		if not SleepVisual.is_asleep_shown(self) and animation != &"asleep":
+			pose_idle()
+	if not animator.in_work:
+		animator.sync_carry(carry_state())
+	order_ai.refresh_overlay()
+
+# While the Orders panel is open: idle picture, turned to the player. False (not held) for the ones the panel cannot be opened for anyway.
+func _hold_for_panel() -> bool:
+	if is_asleep() or state == State.SLEEPING_OUTSIDE or state == State.ON_BED or state == State.INSIDE or state == State.ENTERING or state == State.HELPING_CARRY:
+		return false
+	var p: Node = get_tree().get_first_node_in_group("player")
+	if p != null:
+		flip_h = p.global_position.x < global_position.x
+	# (a swing in hand stops: the idle picture, the normal offset; the work picks up again from its first frame)
+	animator.end_work()
+	if not SleepVisual.is_asleep_shown(self):
+		pose_idle()
+	return true
 
 # --- Dying ---------------------------------------------------------------------------------------------------
 
@@ -287,11 +337,16 @@ func _process(delta: float) -> void:
 func die(cause: String = "starvation") -> void:
 	if dead:
 		return
-	order_ai.release_all(true)
+	# (Working in a room, he lies there: he is not put out at the door first.)
+	var work_room: Node2D = order_ai.inside_room if order_ai.inside_room != null and is_instance_valid(order_ai.inside_room) else null
+	order_ai.release_all(true, false)
+	order_ai.tools.drop_here("he died")
 	dead = true
 	var room: Node2D = null
 	var spot: Vector2 = position
-	if eat.inside() and eat.crate_building != null and is_instance_valid(eat.crate_building):
+	if work_room != null:
+		room = work_room
+	elif eat.inside() and eat.crate_building != null and is_instance_valid(eat.crate_building):
 		room = eat.crate_building.get_interior()
 		spot = eat.crate_spot()
 	elif state == State.ON_BED and bed != null and is_instance_valid(bed):
@@ -319,7 +374,7 @@ func die(cause: String = "starvation") -> void:
 	stop()
 	_clear_asleep_look()
 	_show_asleep(false)
-	visible = true
+	set_body_visible(&"*", true)
 	add_to_group("bodies")
 	remove_from_group("colonists")
 	remove_from_group("eaters")
@@ -381,14 +436,20 @@ func _schedule_tick() -> void:
 		return
 	if clock.is_daytime():
 		_night_rested = false
+	if order_ai.sleepy and not _wants_sleep():
+		order_ai.sleepy = false
 	# (A visitor in a room cannot go to eat or sleep from there: out at the door first.)
-	if state == State.ORDERED and order_ai.visiting != null and (_wants_sleep() or hunger.is_hungry() or _starving(clock)):
+	if state == State.ORDERED and (order_ai.visiting != null or order_ai.inside_room != null) and (_wants_sleep() or hunger.is_hungry() or _starving(clock)):
 		order_ai.release_all()
 	match state:
 		State.IDLE, State.WALKING, State.FOLLOWING, State.ORDERED:
 			if _starving(clock) and not _is_exhausted(clock) and work_claim == null and _start_eating():
 				pass
+			elif _wants_sleep() and not _ready_for_bed():
+				# (still finishing his swing, delivering what he carries, putting the tool back: he sets out for his bed when his hands and his claims are free)
+				pass
 			elif _wants_sleep():
+				order_ai.sleepy = false
 				sleep_reason = SleepReason.NIGHT if (clock.is_bedtime() if home != null else clock.is_night()) else SleepReason.EXHAUSTED
 				_bed_avoid.clear()
 				_start_sleep_routine()
@@ -410,6 +471,11 @@ func _schedule_tick() -> void:
 				pass
 			elif home != null and not _wants_sleep() and clock.is_daytime():
 				_stand_still()
+		State.TO_SLEEP_SPOT:
+			if _starving(clock) and not _is_exhausted(clock) and _start_eating():
+				pass
+			elif not _wants_sleep() and clock.is_daytime():
+				_stand_still()
 		State.TO_BED:
 			# On his way to a bed, but starving (food first) or it is day again and he is rested: carry on.
 			if _starving(clock) and not _is_exhausted(clock) and _start_eating():
@@ -425,6 +491,16 @@ func _schedule_tick() -> void:
 			else:
 				_check_wake(clock)
 
+# Is he ready to set out for his bed? Ordered, the order AI gets him ready (see ColonistOrderAI, GETTING READY FOR BED); standing about or following with a
+# tool or a thing in his hands, the same happens as soon as he is ordered (a held thing makes him sleepy-ordered).
+func _ready_for_bed() -> bool:
+	if state == State.ORDERED:
+		return order_ai.ready_for_bed()
+	if order_ai.tools.holding() or not order_ai.carrying.is_empty() or order_ai.dragger.is_dragging():
+		order_ai.sleepy = true
+		return false
+	return true
+
 # Where he sleeps (shared rules in BedFinder): a free bed (his house's first, then any spare one, the nearest
 # reachable), else the floor of his house, else outdoors where he stands.
 func _start_sleep_routine() -> void:
@@ -434,7 +510,55 @@ func _start_sleep_routine() -> void:
 	elif home != null and is_instance_valid(home):
 		_go_home_to_sleep()
 	else:
+		_go_sleep_outside()
+
+# No bed and no house: he lies down on the ground beside the toolbox or the campfire nearest to him (else where he stands), in the asleep picture; he is never taken
+# out of the world. The hover line says "Sleeping outside, no free bed".
+func _go_sleep_outside() -> void:
+	var spot: Vector2 = Vector2.INF
+	var best: float = 500.0 * 500.0
+	for g in ["toolboxes", "campfires"]:
+		for n in get_tree().get_nodes_in_group(g):
+			if g == "toolboxes" and n.is_carried():
+				continue
+			var d: float = position.distance_squared_to(n.global_position)
+			if d < best:
+				best = d
+				spot = n.global_position + Vector2(0, 20)
+	if spot == Vector2.INF or position.distance_to(spot) < 24.0:
 		_sleep_outside()
+		return
+	waypoints = _path_to(spot)
+	_home_walk_time = 0.0
+	_reset_stuck()
+	state = State.TO_SLEEP_SPOT
+	play("walk")
+
+# The sleep skip: the screen is black and the night is passing. A colonist who would be in bed is brought there in ONE step: what he holds put away first (a tool into
+# the toolbox, a thing into storage or beside the house), his claims let go, then into his bed (or onto his house's floor, or the ground by the toolbox). One who is
+# not due to sleep (a nap of mine by day) carries on with his work as he was.
+func bed_down_for_skip() -> void:
+	if dead or is_asleep() or work_claim != null or state == State.HELPING_CARRY or state == State.TO_WORK or state == State.AT_WORK:
+		return
+	if _game_clock() == null or not _wants_sleep():
+		return
+	eat.abort()
+	order_ai.prepare_instantly()
+	sleep_reason = SleepReason.NIGHT if (_game_clock().is_bedtime() if home != null else _game_clock().is_night()) else SleepReason.EXHAUSTED
+	_bed_avoid.clear()
+	_start_sleep_routine()
+	match state:
+		State.TO_BED:
+			_arrive_at_bed()
+		State.RETURNING:
+			position = home.door_position()
+			waypoints.clear()
+			_begin_entering()
+		State.TO_SLEEP_SPOT:
+			waypoints.clear()
+			_sleep_outside()
+
+# Where he sleeps (shared rules in BedFinder, second part): a free bed
 
 # Debug (F10 from the player): lies down on the ground where he stands and stays asleep until F10 again.
 var _debug_hold: bool = false
@@ -511,7 +635,7 @@ func _forget_bed() -> void:
 			room.shown.erase(self)
 			if room.building != null and is_instance_valid(room.building):
 				position = room.building.door_position()
-			visible = true
+			set_body_visible(&"*", true)
 			in_room = false
 		bed.release_sleeper(self)
 	_interior_walk = false
@@ -524,6 +648,7 @@ func _go_to_bed(target_bed) -> void:
 	_interior_walk = false
 	waypoints = _path_to(bed.approach_point())
 	_home_walk_time = 0.0
+	_walk_budget = _budget_for(waypoints)
 	_reset_stuck()
 	state = State.TO_BED
 	play("walk")
@@ -535,7 +660,7 @@ func _arrive_at_bed() -> void:
 	if room != null and room.player_inside and not _interior_walk:
 		_interior_walk = true
 		position = room.door_world()
-		visible = true
+		set_body_visible(&"*", true)
 		room.shown.append(self)
 		waypoints = [bed.sleep_spot_world()]
 		_reset_stuck()
@@ -550,12 +675,12 @@ func _lie_on_bed() -> void:
 	if room != null:
 		# In a room he is seen only while the player is in it.
 		_interior_walk = false
-		visible = room.player_inside
+		set_body_visible(&"room", room.player_inside)
 		in_room = room.player_inside
 		if room.player_inside and not room.shown.has(self):
 			room.shown.append(self)
 	else:
-		visible = true
+		set_body_visible(&"*", true)
 	waypoints.clear()
 	target_point = Vector2.INF
 	state = State.ON_BED
@@ -568,19 +693,28 @@ func _go_home_to_sleep() -> void:
 	_nap_seconds = 0.0
 	waypoints = _path_to(home.door_position())
 	_home_walk_time = 0.0
+	_walk_budget = _budget_for(waypoints)
 	_reset_stuck()
 	state = State.RETURNING
 	play("walk")
+
+# The time a walk along `path` may take: walk_home_timeout, or for a long way (a farm by the creek, a tree far from the house) what a quarter of his speed needs plus 10 s.
+func _budget_for(path: Array) -> float:
+	var length: float = 0.0
+	var at: Vector2 = position
+	for p in path:
+		length += at.distance_to(p)
+		at = p
+	return maxf(walk_home_timeout, length / maxf(8.0, speed * 0.25) + 10.0)
 
 func _replan_home() -> void:
 	if home == null or not is_instance_valid(home):
 		_stand_still()
 		return
-	if _home_walk_time > walk_home_timeout:
-		# Stuck for good: put him at the door rather than leave him outside all night.
-		position = home.door_position()
+	if _home_walk_time > _walk_budget:
+		# Stuck for good (the house cannot be reached): he lies down beside the toolbox or the campfire, in the open and visible.
 		waypoints.clear()
-		_begin_entering()
+		_go_sleep_outside()
 		return
 	waypoints = _path_to(home.door_position())
 	_reset_stuck()
@@ -605,7 +739,7 @@ func _clear_asleep_look() -> void:
 # (see BuildingInterior).
 func show_in_room(spot: Vector2) -> void:
 	in_room = true
-	visible = true
+	set_body_visible(&"*", true)
 	if state == State.ON_BED or state == State.TO_BED:
 		return
 	position = spot
@@ -615,18 +749,23 @@ func show_in_room(spot: Vector2) -> void:
 		SleepVisual.set_asleep(self, false)
 		play("idle")
 
+# The player left the room he is working in: he goes on with his job there, out of sight (nothing is moved).
+func hide_in_place() -> void:
+	in_room = false
+	set_body_visible(&"room", false)
+
 func hide_from_room() -> void:
 	in_room = false
 	if state == State.TO_BED and _interior_walk:
 		# The player left while he was still walking in: he is on the bed.
 		_lie_on_bed()
-		visible = false
+		set_body_visible(&"room", false)
 		return
 	if state == State.ON_BED:
-		visible = false
+		set_body_visible(&"room", false)
 		return
 	SleepVisual.set_asleep(self, false)
-	visible = false
+	set_body_visible(&"room", false)
 	if home != null and is_instance_valid(home):
 		position = home.door_position()
 
@@ -695,8 +834,14 @@ func is_available_for_work() -> bool:
 
 # --- Orders ---------------------------------------------------------------------------------------------------------------
 
+# His orders changed (a stance, a role taken away, all orders cleared): a workstation he is helping at (the pit saw) lets him go at once.
+func orders_changed() -> void:
+	if work_claim != null and is_instance_valid(work_claim) and work_claim.has_method("helper_left"):
+		work_claim.helper_left(self)
+
 # Gives him a stance. (His claims go; STAY keeps him where he is now.)
 func set_stance(stance: int) -> void:
+	orders_changed()
 	# (Follow and Assist pause the work: what he carries is set down; Free and Stay keep tasks and roles going.)
 	order_ai.release_all(stance == Orders.Stance.FOLLOW or stance == Orders.Stance.ASSIST)
 	orders.set_stance(stance, position)
@@ -729,10 +874,14 @@ func status_text() -> String:
 			return order_ai.status if order_ai.status != "" else "Waiting"
 		State.EATING, State.TO_BUSH, State.TO_CRATE, State.EATING_CRATE:
 			return "Eating" if state == State.EATING or state == State.EATING_CRATE else "Looking for food"
-		State.SLEEPING_OUTSIDE, State.ON_BED, State.INSIDE, State.ENTERING:
+		State.SLEEPING_OUTSIDE:
+			return "Sleeping outside, no free bed"
+		State.ON_BED, State.INSIDE, State.ENTERING:
 			return "Resting"
 		State.TO_BED, State.RETURNING, State.MOVING_IN:
 			return "Heading home"
+		State.TO_SLEEP_SPOT:
+			return "Looking for a place to sleep"
 		State.TO_WORK, State.AT_WORK:
 			return "Helping at the pit saw"
 		State.FOLLOWING:
@@ -756,10 +905,16 @@ func hover_note() -> String:
 		text += "\n" + order_ai.last_report
 	if paused_text() != "":
 		text += "\n" + paused_text()
+	if order_ai.tools.holding():
+		text += "\nHolding: %s" % String(order_ai.tools.held).replace("_", " ")
 	var why: String = talk_block_reason()
 	if why != "":
 		text += "\n" + why
 	return text
+
+# Asked to bring the borrowed tool back (the greyed row in the toolbox panel): after the swing in hand he walks it back.
+func recall_tool() -> void:
+	order_ai.tools.recall()
 
 # "Tasks paused while following." when he has work he is not doing because of his stance.
 func paused_text() -> String:
@@ -776,16 +931,41 @@ func talk(_player) -> String:
 	orders_panel.open_for(_player)
 	return ""
 
-# A small bob for work he has no picture for yet (a strike): up a pixel and back.
-func work_bob() -> void:
-	var tw: Tween = create_tween()
-	tw.tween_property(self, "offset", _base_offset + Vector2(0, -1), 0.06)
-	tw.tween_property(self, "offset", _base_offset, 0.08)
+# --- What he holds and how he looks for it (CharacterAnimator) ---------------------------------------------------------------
+
+# What he CARRIES (the item with the little picture above his head), for the picker and the overlay rule: a plank, the saw blade or an item; no tools.
+func carried_state() -> Dictionary:
+	var carried: StringName = order_ai.carrying.get("kind", &"")
+	var item: StringName = &""
+	if carried != &"" and carried != &"plank" and carried != &"saw_blade":
+		item = carried
+	return CharacterAnimator.held_state(false, 1 if carried == &"plank" else 0, carried == &"saw_blade", "", item)
+
+# What is in his hands, for the picker: a dragged log (the normal walk), what he carries, else the tool he holds.
+func carry_state() -> Dictionary:
+	var ai: Node = order_ai
+	var state: Dictionary = carried_state()
+	state["dragging"] = ai.dragger.is_dragging()
+	if CharacterAnimator.carry_key(carried_state()) == &"" and ai.tools != null and ai.tools.held != &"":
+		state["item"] = ai.tools.held
+	return state
+
+func _refresh_overlay() -> void:
+	if order_ai != null:
+		order_ai.refresh_overlay()
+
+func pose_walk() -> void:
+	animator.pose(carry_state(), true)
+
+func pose_idle() -> void:
+	animator.pose(carry_state(), false)
 
 # --- Helping to carry (the CarryTogether drives these) -----------------------------------------------------------------------
 
 func begin_carry_help(job) -> void:
 	order_ai.release_all(true)
+	# (both hands are on the toolbox: a tool he held goes back first)
+	order_ai.tools.return_instantly()
 	eat.abort()
 	carry_job = job
 	state = State.HELPING_CARRY
@@ -813,10 +993,9 @@ func carry_walk_to(point: Vector2, delta: float, speed_multiplier: float = 1.0) 
 		_follow_path(delta, speed_multiplier)
 	var moved: float = position.distance_to(before)
 	if moved > 0.01:
-		if animation != &"walk":
-			play("walk")
-	elif animation != &"idle":
-		play("idle")
+		pose_walk()
+	else:
+		pose_idle()
 	return moved
 
 # Awake but too tired to help (the pit saw says "too tired").
@@ -845,7 +1024,7 @@ func claim_for_work(job, spot: Vector2) -> void:
 func hide_for_work() -> void:
 	if dead:
 		return
-	visible = false
+	set_body_visible(&"pose", false)
 
 func show_after_work(spot: Vector2) -> void:
 	if dead:
@@ -1023,7 +1202,7 @@ func _go_inside() -> void:
 	state = State.INSIDE
 	waypoints.clear()
 	stop()
-	visible = false
+	set_body_visible(&"inside", false)
 	if sleep_reason == SleepReason.NONE:
 		sleep_reason = SleepReason.NIGHT
 	_nap_seconds = 0.0
@@ -1034,7 +1213,23 @@ func _go_inside() -> void:
 		home.interior.show_colonist(self)
 
 func _show() -> void:
-	visible = true
+	set_body_visible(&"*", true)
+
+# THE ONE PLACE a colonist's body is shown or hidden. Whoever hides him names itself ("room": out of sight in a room the player is not in, "inside": asleep
+# in his house, "pose": at the pit saw, "crate": eating from a crate, "job": a step of a job that goes out of sight for a moment), and shows him again under
+# the same name; he is visible exactly while nobody keeps him hidden. The name "*" shows him whatever hid him (arriving, waking, a room closing).
+# ColonistViewGuard (debug builds) checks that every name still has its reason, and puts him back when one has not.
+var hidden_by: Dictionary = {}
+
+func set_body_visible(source: StringName, on: bool) -> void:
+	if on:
+		if source == &"*":
+			hidden_by.clear()
+		else:
+			hidden_by.erase(source)
+	else:
+		hidden_by[source] = true
+	visible = hidden_by.is_empty()
 
 func _return_to_door() -> void:
 	state = State.RETURNING

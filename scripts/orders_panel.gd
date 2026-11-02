@@ -23,6 +23,9 @@ var _column: VBoxContainer
 var _status: Label
 var _stance_note: Label
 var _tasks_label: Label
+var _farm_label: Label
+var _cook_label: Label
+var _target_label: Label
 var _paused_label: Label
 var _roles_box: VBoxContainer
 var _buttons: Dictionary = {}
@@ -30,7 +33,7 @@ var _role_state: Array = []
 
 func setup(c: Node2D) -> void:
 	colonist = c
-	Ui.register_closable(Callable(self, "is_panel_open"), Callable(self, "close"))
+	Ui.register_closable(Callable(self, "is_panel_open"), Callable(self, "close"), "the orders panel", Ui.TIER_PANEL)
 
 func is_panel_open() -> bool:
 	return is_open
@@ -58,6 +61,9 @@ func close() -> void:
 	_scroll = null
 	_status = null
 	_tasks_label = null
+	_farm_label = null
+	_cook_label = null
+	_target_label = null
 	_paused_label = null
 	_roles_box = null
 	_buttons.clear()
@@ -77,12 +83,29 @@ func _process(_delta: float) -> void:
 	if is_instance_valid(_tasks_label):
 		var queued: String = colonist.orders.tasks_text()
 		_tasks_label.text = "Queued: %s" % queued if queued != "" else "No tasks queued."
+	if is_instance_valid(_farm_label):
+		# the farm zones: "2 zones, 38 cells, 12 ripe" (and a farmer with none says so)
+		var summary: String = load("res://scripts/plot_manager.gd").get_for(get_tree()).farm_summary()
+		if summary == "" and colonist.orders.has_role(&"farmer"):
+			summary = "No farm zone"
+		_farm_label.text = ("Farm: %s" % summary) if summary != "" else ""
+		_farm_label.visible = summary != ""
+	if is_instance_valid(_target_label):
+		_target_label.text = "Bread target: %d" % colonist.colony.bread_target
+	if is_instance_valid(_cook_label):
+		_cook_label.text = load("res://scripts/cook_jobs.gd").summary(get_tree(), colonist) if colonist.orders.has_role(&"cook") else ""
+		_cook_label.visible = _cook_label.text != ""
 	if is_instance_valid(_paused_label):
 		_paused_label.text = colonist.paused_text()
 		_paused_label.visible = _paused_label.text != ""
 	if _role_state != colonist.orders.roles:
 		_refresh_roles()
 	_place()
+
+# The bread target of the Cook: one more or less, kept between 0 and 20.
+func _change_target(step: int) -> void:
+	colonist.colony.bread_target = clampi(int(colonist.colony.bread_target) + step, 0, 20)
+	Ui.sfx("ui_click")
 
 func choose(stance: int) -> void:
 	colonist.set_stance(stance)
@@ -193,6 +216,24 @@ func _build() -> void:
 		_column.add_child(task_button)
 	_tasks_label = _small_label("")
 	_column.add_child(_tasks_label)
+	_farm_label = _small_label("")
+	_column.add_child(_farm_label)
+	# the Cook: the bread target (- and +, 0 to 20) and the stock summary
+	var target_row := HBoxContainer.new()
+	target_row.add_theme_constant_override("separation", Ui.px(6))
+	_column.add_child(target_row)
+	var minus := _button("-", Vector2(30, 30))
+	minus.tooltip_text = "Bake less bread"
+	minus.pressed.connect(_change_target.bind(-1))
+	target_row.add_child(minus)
+	_target_label = _small_label("")
+	target_row.add_child(_target_label)
+	var plus := _button("+", Vector2(30, 30))
+	plus.tooltip_text = "Bake more bread"
+	plus.pressed.connect(_change_target.bind(1))
+	target_row.add_child(plus)
+	_cook_label = _small_label("")
+	_column.add_child(_cook_label)
 	_paused_label = _small_label("", &"BrassLabel")
 	_column.add_child(_paused_label)
 	var clear := _button("Clear all orders", Vector2(260, 34))
@@ -234,7 +275,10 @@ func _refresh_roles() -> void:
 		_roles_box.add_child(_small_label(Orders.ROLE_DESCRIPTIONS[role]))
 
 func _toggle_role(role: StringName) -> void:
+	var had: bool = colonist.orders.has_role(role)
 	colonist.orders.toggle_role(role)
+	if had:
+		colonist.orders_changed()
 	if not colonist.orders.has_role(role) and colonist.order_ai.work_job != null and colonist.order_ai.work_job.role == role:
 		colonist.order_ai.release_all(false)
 	Ui.sfx("ui_click")
@@ -254,6 +298,7 @@ func _start_task(task_type: StringName) -> void:
 	mode.start(who, task_type)
 
 func _clear() -> void:
+	colonist.orders_changed()
 	colonist.order_ai.release_all(true)
 	colonist.orders.clear_work()
 	var hud: Node = get_tree().get_first_node_in_group("hud")

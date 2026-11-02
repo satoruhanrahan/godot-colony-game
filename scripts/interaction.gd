@@ -435,6 +435,12 @@ func show_message(text: String) -> void:
 		hud.say(text)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# While he saws, E (or a movement key, see MainCharacter) steps him out of the saw.
+	if player.state == player.State.SAWING:
+		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
+			get_viewport().set_input_as_handled()
+			player.stop_sawing()
+		return
 	if player.carrying_together != null or player.designating:
 		if event is InputEventMouseMotion:
 			_mouse_moved_at = _now()
@@ -1377,7 +1383,7 @@ func _open_chooser(list: Array) -> void:
 	_end_hold()
 	if not _ch_registered:
 		_ch_registered = true
-		Ui.register_closable(Callable(self, "is_chooser_open"), Callable(self, "close_chooser"))
+		Ui.register_closable(Callable(self, "is_chooser_open"), Callable(self, "close_chooser"), "the action chooser", Ui.TIER_CHOOSER)
 	Ui.sfx("ui_open")
 	_build_chooser()
 

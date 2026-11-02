@@ -17,14 +17,14 @@ const RestMeter = preload("res://scripts/rest_meter.gd")
 const RestIndicator = preload("res://scripts/rest_indicator.gd")
 # Frame of the "chop" sheet where the axe head is fully extended (the strike). Each hit is
 # counted when this frame appears, so the counter matches the visible impact.
-const CHOP_STRIKE_FRAME: int = 6
+const CHOP_STRIKE_FRAME: int = CharacterAnimator.CHOP_STRIKE_FRAME
 # Frame of the "dig" sheet where the shovel blade comes down into the ground (the last
 # frame; frame 0 is the blade resting in the ground, the start pose).
-const DIG_STRIKE_FRAME: int = 7
+const DIG_STRIKE_FRAME: int = CharacterAnimator.DIG_STRIKE_FRAME
 # Frame of the "pull" sheet where the grass comes up (the yank), counted as one pull.
-const PULL_STRIKE_FRAME: int = 3
+const PULL_STRIKE_FRAME: int = CharacterAnimator.PULL_STRIKE_FRAME
 # Frame of the "hammer" sheet where the hammer head is fully out (the blow); frame 2 holds it.
-const HAMMER_STRIKE_FRAME: int = 1
+const HAMMER_STRIKE_FRAME: int = CharacterAnimator.HAMMER_STRIKE_FRAME
 
 @export var speed: float = 40.0
 # Playable area, and how far the character's sprite stays from its edges
@@ -89,6 +89,8 @@ enum State { FREE, WALKING_TO, CHOP_IDLE, CHOPPING, SAW_WALK, SAWING, SLEEPING }
 var state: State = State.FREE
 var dragger
 var base_offset: Vector2
+# Picks and plays his animations (the same CharacterAnimator every colonist uses).
+var animator: CharacterAnimator
 # The asleep picture (main_character_asleep.png, the "asleep" animation) is shown while he lies on a bed or
 # on the ground (not in a house: he is hidden there). Same 16x16 canvas as the standing picture, so only these
 # small nudges (on top of his normal offset) are ever needed; the picture is never scaled.
@@ -133,14 +135,40 @@ var _unheld_age: float = 0.0
 # The opening hint about beds: shown from the first bundle he pulls until a bed has been made.
 var first_bundle_pulled: bool = false
 var bed_made: bool = false
+# THE ONE HELD-ITEM SLOT (character_hands.gd). He holds ONE thing at a time: planks, the saw blade, a tool, a basket, a loaf, ... (a dragged log and a toolbox
+# carried with the friend take the hands too). The three variables below are views of that slot, not stores of their own, so two of them can never be set at
+# once: taking a second thing while one is held is a bug, reported once (HELD-ITEM) and mended by putting the first down at his feet. Callers put down or
+# swap first (swap_on_pickup, _unhold / _place_item).
+var hands: CharacterHands = CharacterHands.new("the player")
 # Planks in his hands.
-var carrying_planks: int = 0
-# A saw blade in his hands. He holds only one thing at a time: a plank, a blade, or a log.
-var carrying_blade: bool = false
-# A tool in his hands (also one thing at a time): &"hammer", &"shovel", &"axe" or &"" for none. Where
+var carrying_planks: int:
+	get:
+		return hands.amount if hands.kind == CharacterHands.PLANK else 0
+	set(value):
+		if value > 0:
+			_slot_take(CharacterHands.PLANK, value)
+		elif hands.kind == CharacterHands.PLANK:
+			hands.clear()
+# A saw blade in his hands.
+var carrying_blade: bool:
+	get:
+		return hands.kind == CharacterHands.BLADE
+	set(value):
+		if value:
+			_slot_take(CharacterHands.BLADE, 1)
+		elif hands.kind == CharacterHands.BLADE:
+			hands.clear()
+# A tool or item in his hands: &"hammer", &"shovel", &"axe", &"basket", ... or &"" for none. Where
 # tools are required (see tools_required) hammering needs the hammer, digging the shovel and
 # chopping the axe; a tool does not slow him down.
-var held_tool: StringName = &""
+var held_tool: StringName:
+	get:
+		return hands.kind if hands.kind != CharacterHands.PLANK and hands.kind != CharacterHands.BLADE else &""
+	set(value):
+		if value != &"":
+			_slot_take(value, 1)
+		elif hands.kind != CharacterHands.PLANK and hands.kind != CharacterHands.BLADE:
+			hands.clear()
 # The seeds in the seed bag he holds (held_tool == &"seed_bag"); a bag put down keeps them (see _unhold).
 var held_seeds: int = 0
 var _unheld_seeds: int = 0
@@ -208,7 +236,10 @@ var chop_work_done: bool = false
 var chop_queued: bool = false
 var claim_left: float = 0.0
 # The CarryTogether he is part of (the toolbox lifted with the friend), or null. While it is set he can only walk and put it down.
-var carrying_together = null
+var carrying_together = null:
+	set(value):
+		carrying_together = value
+		hands.together = value
 # True while the player is marking a colonist's tasks on the main view (designation_mode.gd): no other actions then.
 var designating: bool = false
 # What he did last ({"kind": chop / delimb / hammer / pull / till / sow / water / harvest, "target", "cell", "at": seconds}): an assisting
@@ -221,8 +252,11 @@ func _note_work(kind: StringName, target = null, cell: Vector2i = Vector2i.ZERO)
 func _ready() -> void:
 	add_to_group("player")
 	base_offset = sprite.offset
+	animator = CharacterAnimator.new(sprite, base_offset)
+	animator.config = self
 	SleepVisual.ensure(sprite, "res://sprites/main_character_asleep.png")
 	dragger = LogDragger.new(self, sprite)
+	hands.dragger = dragger
 	sprite.frame_changed.connect(_on_frame_changed)
 	sprite.animation_finished.connect(_on_animation_finished)
 	sprite.play(_idle_anim())
@@ -306,6 +340,9 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 	if state == State.SAWING:
+		# (a movement key steps him out of the saw: it stops, the log keeps its progress, and so does the helper's pose)
+		if Input.get_vector("move_left", "move_right", "move_up", "move_down") != Vector2.ZERO:
+			stop_sawing()
 		return
 	if state == State.SLEEPING:
 		_tick_sleep()
@@ -368,34 +405,18 @@ func _clamp_to_map() -> void:
 # The walk / idle animation for what he holds: a plank, a saw blade or a tool in his arms has its
 # own (dragging a log keeps the normal walk). Chop, dig and hammer play their own animations,
 # which show the tool in use in his hand; the carrying one comes back afterwards.
-func _walk_anim() -> StringName:
-	if dragger.is_dragging():
-		return &"walk"
-	if carrying_planks > 0:
-		return &"carry_plank"
-	if carrying_blade:
-		return &"carry_blade"
+# What he holds, as the shared picker wants it (CharacterAnimator).
+func _held_state() -> Dictionary:
+	var bundle: String = ""
 	if held_tool == &"bundle":
-		return &"carry_hay" if bundle_is_hay() else &"carry_grass"
-	if held_tool != &"" and held_tool != &"berry":
-		var carry: StringName = StringName("carry_" + held_tool)
-		# (An item with no carrying picture yet: he just walks.)
-		return carry if sprite.sprite_frames.has_animation(carry) else &"walk"
-	return &"walk"
+		bundle = "hay" if bundle_is_hay() else "grass"
+	return CharacterAnimator.held_state(dragger.is_dragging(), carrying_planks, carrying_blade, bundle, held_tool if held_tool != &"bundle" else &"")
+
+func _walk_anim() -> StringName:
+	return CharacterAnimator.walk_name(sprite.sprite_frames, _held_state())
 
 func _idle_anim() -> StringName:
-	if dragger.is_dragging():
-		return &"idle"
-	if carrying_planks > 0:
-		return &"carry_plank_idle"
-	if carrying_blade:
-		return &"carry_blade_idle"
-	if held_tool == &"bundle":
-		return &"carry_hay_idle" if bundle_is_hay() else &"carry_grass_idle"
-	if held_tool != &"" and held_tool != &"berry":
-		var carry_idle: StringName = StringName("carry_%s_idle" % held_tool)
-		return carry_idle if sprite.sprite_frames.has_animation(carry_idle) else &"idle"
-	return &"idle"
+	return CharacterAnimator.idle_name(sprite.sprite_frames, _held_state())
 
 # His speed: what he carries (a log 50%, a plank or the blade 75%, nothing or a tool 100%) times the
 # share his tiredness leaves him (100% from rest 40 up, 60% at rest 0).
@@ -419,7 +440,38 @@ func _current_speed() -> float:
 
 # He holds one thing at a time: a plank, a saw blade, a tool or a dragged log.
 func hands_occupied() -> bool:
-	return dragger.is_dragging() or carrying_planks > 0 or carrying_blade or held_tool != &"" or carrying_together != null
+	return hands.is_holding()
+
+# For tests: whatever is in his hands is replaced by `kind` (&"" for nothing), planks, or the blade, without putting the old thing down.
+func debug_hold(kind: StringName) -> void:
+	hands.clear()
+	if kind != &"":
+		hands.kind = kind
+		hands.amount = 1
+
+func debug_hold_planks(count: int) -> void:
+	hands.clear()
+	if count > 0:
+		hands.kind = CharacterHands.PLANK
+		hands.amount = count
+
+func debug_hold_blade() -> void:
+	hands.clear()
+	hands.kind = CharacterHands.BLADE
+	hands.amount = 1
+
+# Takes `kind` into the one slot. When the slot already holds something else the caller broke the rule (it should have put that down or swapped first):
+# said once, and the old thing goes down at his feet so nothing is held twice, lost or doubled.
+func _slot_take(kind: StringName, amount: int) -> void:
+	if hands.kind != &"" and hands.kind != kind:
+		CharacterHands.report("the player took '%s' while holding '%s'" % [kind, held_item()])
+		for i in 3:
+			if hands.kind == &"" or hands.kind == kind:
+				break
+			_place_item(_unhold(), position)
+	hands.kind = kind
+	hands.amount = amount
+	hands.as_tool = false
 
 # While the first pit saw is not built (opening mode) the 2 planks and the blade are kept for
 # it: no planks to other blueprints or the Storage.
@@ -689,19 +741,8 @@ func _start_swing() -> void:
 	chop_queued = false
 	claim_left = claim_hold_time
 	sprite.flip_h = chop_side > 0.0
-	if work_kind == &"pull" or work_kind == &"bedbreak" or work_kind == &"pick":
-		# The pulling frames share the walk frames' canvas too.
-		sprite.offset = base_offset
-		sprite.play("pull")
-		return
-	if work_kind == &"hammer" or work_kind == &"dismantle":
-		# The hammer frames share the walk frames' canvas: no extra offset.
-		sprite.offset = base_offset
-		sprite.play("hammer")
-		return
-	var offs: Vector2 = dig_sprite_offset if work_kind == &"dig" else chop_sprite_offset
-	sprite.offset = Vector2(offs.x * (-1.0 if sprite.flip_h else 1.0), offs.y)
-	sprite.play("dig" if work_kind == &"dig" else "chop")
+	# (pull, hammer: the walk's canvas, no shift; dig and chop: their 32x32 canvas shifted so the body stands where he does; anything else chops)
+	animator.start_work(work_kind if CharacterAnimator.WORK.has(work_kind) else &"chop", sprite.flip_h)
 
 func _on_frame_changed() -> void:
 	if state != State.CHOPPING:
@@ -1693,6 +1734,7 @@ func grinding_stone_add(q) -> String:
 	var msg: String = q.add_sheaf(self)
 	if msg == "":
 		held_tool = &""
+		_note_work(&"cook", q)
 	return msg
 
 # E at a grinding stone with empty hands: takes the flour if there is some, else one press of grinding.
@@ -1704,6 +1746,7 @@ func grinding_stone_press(q) -> String:
 			held_tool = &"flour"
 			AudioManager.play("pickup", position)
 		return ""
+	_note_work(&"cook", q)
 	return q.grind_press(self)
 
 # --- The campfire -----------------------------------------------------------------------------------------------
@@ -1768,6 +1811,7 @@ func campfire_place_dough(fire) -> String:
 	var msg: String = fire.place_dough()
 	if msg == "":
 		held_tool = &""
+		_note_work(&"cook", fire)
 	return msg
 
 # E at a campfire with empty hands and something on the stone: takes it (a cooked flatbread, or the flour back from
@@ -2168,6 +2212,7 @@ func board_press(b) -> String:
 			held_tool = &"dough"
 			AudioManager.play("pickup", position)
 		return ""
+	_note_work(&"cook", b)
 	return b.knead_press(self)
 
 # --- Plots (see plot_manager.gd) -------------------------------------------------------------------------------
@@ -2330,6 +2375,10 @@ func toolbox_put(box) -> String:
 func toolbox_take(box, index: int) -> String:
 	if index < 0 or index >= box.contents.size():
 		return ""
+	# a tool a colonist has reserved for himself is not mine to take
+	var holder: Node = box.reserved_by(box.contents[index]["kind"])
+	if holder != null:
+		return "Reserved by %s." % holder.display_name
 	var holding_other: bool = dragger.is_dragging() or carrying_planks > 0 or carrying_blade or (held_tool != &"" and not box.accepts_kind(held_tool))
 	if holding_other:
 		return "Your hands are full"
@@ -2406,6 +2455,11 @@ func start_saw_walk(pit) -> void:
 	saw_pit = pit
 	saw_arrived = false
 	_walk_to(pit.player_spot_world(), State.SAW_WALK)
+
+# He stops sawing (a movement key, E again): the pit saw stops, he steps out of the pose and the helper with him.
+func stop_sawing() -> void:
+	if saw_pit != null:
+		saw_pit.stop_sawing(self)
 
 # Both sawyers are drawn by the pit's in-use sprite, so he is hidden and out of the world.
 func hide_for_sawing() -> void:

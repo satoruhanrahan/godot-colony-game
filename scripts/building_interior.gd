@@ -425,6 +425,41 @@ func _flood_reaches(seen: Dictionary, point: Vector2) -> bool:
 				return true
 	return false
 
+# A place on the floor where someone can stand to work on / hand something to the thing that covers `cover` (the room's pixels, world
+# coordinates): `prefer` first, then the other sides, then a ring. It must be on the floor, not on a solid base, not within `apart` of
+# one of `avoid` (the spot the player already uses) and reachable from the door round the room's solid things. Vector2.INF = no such place.
+func standing_spot(cover: Rect2, prefer: Vector2, avoid: Array = [], apart: float = 12.0) -> Vector2:
+	var solids: Array[Rect2] = solid_rects()
+	var reach: Dictionary = _flood(solids, exit_point_world())
+	var candidates: Array[Vector2] = [prefer]
+	var centre: Vector2 = cover.get_center()
+	var radius: float = maxf(cover.size.x, cover.size.y) * 0.5 + 8.0
+	for angle in [180.0, 0.0, 90.0, 270.0, 135.0, 225.0, 45.0, 315.0]:
+		candidates.append(centre + Vector2.from_angle(deg_to_rad(angle)) * radius)
+	candidates.append(centre + Vector2(-radius - 8.0, 0.0))
+	candidates.append(centre + Vector2(radius + 8.0, 0.0))
+	for raw in candidates:
+		var p: Vector2 = clamp_walk(raw).round()
+		if not _walkable(p):
+			continue
+		var blocked: bool = false
+		for r in solids:
+			if r.grow(3.0).has_point(p):
+				blocked = true
+				break
+		if blocked:
+			continue
+		var near_other: bool = false
+		for a in avoid:
+			if p.distance_to(a) < apart:
+				near_other = true
+				break
+		if near_other:
+			continue
+		if _flood_reaches(reach, p):
+			return p
+	return Vector2.INF
+
 # Things in the room that sort with the player go into the y-sorted world root.
 func add_object(node: Node2D) -> void:
 	get_parent().add_child(node)
@@ -460,10 +495,20 @@ func _spot_free(spot: Vector2) -> bool:
 	var player: Node2D = get_tree().get_first_node_in_group("player")
 	return player == null or player.global_position.distance_to(spot) > 14.0
 
+# A colonist who is really standing in this room (his position is in it) for a job or a visit: not asleep, not at a crate.
+func is_worker_here(c) -> bool:
+	return not c.dead and c.state == c.State.ORDERED and rect_world().has_point(c.position)
+
 # The player has come in: the colonists of this house who are inside it show in the room.
 func player_entered() -> void:
 	player_inside = true
 	refresh_stock()
+	# Anyone who is working in here (a job inside the building): seen where he stands.
+	for c in get_tree().get_nodes_in_group("colonists"):
+		if is_worker_here(c) and not shown.has(c):
+			shown.append(c)
+			c.in_room = true
+			c.set_body_visible(&"*", true)
 	for c in get_tree().get_nodes_in_group("colonists"):
 		if (c.home == building and c.state == c.State.INSIDE) or (c.state == c.State.ON_BED and c.bed != null and is_instance_valid(c.bed) and c.bed.interior_node() == self):
 			show_colonist(c)
@@ -498,6 +543,9 @@ func player_left() -> void:
 			var trip = c.get_meta(&"eat_trip") if c.has_meta(&"eat_trip") else null
 			if trip != null and trip.inside():
 				trip.hide_from_room()
+			elif is_worker_here(c) and c.order_ai.visiting == null:
+				# (He goes on with his job in here, out of sight: his place in the room is the truth, nothing is moved.)
+				c.hide_in_place()
 			else:
 				c.hide_from_room()
 	shown.clear()
@@ -539,4 +587,8 @@ func close(near: Vector2) -> void:
 		for item in get_tree().get_nodes_in_group(group):
 			if room.has_point(item.global_position):
 				item.global_position = PlankPiles.free_spot(get_tree(), near + Vector2(randf_range(-20, 20), 12), Rect2(0, 0, 640, 640), near)
+	# Colonists who were working in here are put out at the door.
+	for c in get_tree().get_nodes_in_group("colonists"):
+		if is_worker_here(c):
+			c.order_ai.on_room_closed(near)
 	queue_free()

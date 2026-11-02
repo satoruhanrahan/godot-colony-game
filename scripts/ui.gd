@@ -373,6 +373,7 @@ func adopt(label: Label, anchor: Vector2 = Vector2(0.5, 1.0), kind: String = "sm
 	_adopted.append([weakref(label), anchor, kind])
 
 func _process(_delta: float) -> void:
+	_track_closables()
 	for i in range(_adopted.size() - 1, -1, -1):
 		var entry: Array = _adopted[i]
 		var label: Label = entry[0].get_ref()
@@ -452,25 +453,107 @@ func art_point(control: Control, offset: Vector2 = Vector2.ZERO) -> Vector2:
 
 # --- Panels that Esc closes ----------------------------------------------------------------------------------------
 
-# A panel registers how to ask "is it open?" and how to close it. Esc closes the topmost open one before it pauses.
-func register_closable(is_open: Callable, close: Callable) -> void:
-	_closables.append({"open": is_open, "close": close})
+# ESC, IN ONE PLACE (this node, _input, so nothing else sees the key and a press can never do two things):
+#   1. the pause menu, when it is up: Esc resumes (and nothing else happens);
+#   2. otherwise the TOP-MOST open thing is closed, and only that: things register with a tier (lower = closes first) and, inside a tier, the one opened
+#      last closes first. In order: designation mode (1), the action chooser (2), carrying the toolbox with the friend (3), build mode: the build menu and
+#      its ghost (4), then the panels: toolbox, orders (5). Esc closes one of them and is consumed;
+#   3. with nothing open the pause menu opens.
+# The key release and the repeats of a held Esc are swallowed too, and a second Esc event in the same frame is ignored (the one-frame guard), so a
+# press cannot leak into the pause menu on its release or on the next frame. Nothing else in the game handles Esc.
+const TIER_DESIGNATION: int = 1
+const TIER_CHOOSER: int = 2
+const TIER_CARRY: int = 3
+const TIER_BUILD: int = 4
+const TIER_PANEL: int = 5
 
-# Closes one open panel (the last registered that is open); true if there was one. (A panel that has been freed is forgotten.)
-func close_top_panel() -> bool:
+var _open_seq: int = 0
+var _esc_frame: int = -1
+# What the last Esc did ("closed designation mode", "closed the toolbox panel", "opened the pause menu", "resumed", "ignored").
+var last_escape: String = ""
+
+# A panel / mode registers how to ask "is it open?" and how to close it.
+func register_closable(is_open: Callable, close: Callable, label: String = "panel", tier: int = TIER_PANEL) -> void:
+	_closables.append({"open": is_open, "close": close, "label": label, "tier": tier, "since": 0, "was_open": false})
+
+func _forget_dead_closables() -> void:
 	_closables = _closables.filter(func(c: Dictionary) -> bool: return c["open"].is_valid() and c["close"].is_valid())
-	for i in range(_closables.size() - 1, -1, -1):
-		if _closables[i]["open"].call():
-			_closables[i]["close"].call()
-			return true
-	return false
+
+# Notes when each thing opens (so the one opened last closes first inside its tier).
+func _track_closables() -> void:
+	for c in _closables:
+		if not c["open"].is_valid():
+			continue
+		var open: bool = c["open"].call()
+		if open and not c["was_open"]:
+			_open_seq += 1
+			c["since"] = _open_seq
+		c["was_open"] = open
+
+# The open ones, the one Esc closes first at the front.
+func open_closables() -> Array:
+	_forget_dead_closables()
+	_track_closables()
+	var out: Array = _closables.filter(func(c: Dictionary) -> bool: return c["open"].call())
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["tier"] != b["tier"]:
+			return a["tier"] < b["tier"]
+		return a["since"] > b["since"])
+	return out
+
+# Closes the top-most open thing; true if there was one.
+func close_top_panel() -> bool:
+	var open: Array = open_closables()
+	if open.is_empty():
+		return false
+	last_escape = "closed " + String(open[0]["label"])
+	open[0]["close"].call()
+	return true
 
 func any_panel_open() -> bool:
-	_closables = _closables.filter(func(c: Dictionary) -> bool: return c["open"].is_valid() and c["close"].is_valid())
-	for c in _closables:
-		if c["open"].call():
-			return true
-	return false
+	return not open_closables().is_empty()
+
+# What Esc closes, in order (labels of everything registered, top tier first).
+func escape_order() -> Array:
+	_forget_dead_closables()
+	var all: Array = _closables.duplicate()
+	all.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["tier"] < b["tier"])
+	var out: Array = ["the pause menu (when it is up: Esc resumes)"]
+	for c in all:
+		var text: String = "%s (tier %d)" % [c["label"], c["tier"]]
+		if not out.has(text):
+			out.append(text)
+	out.append("nothing open: Esc opens the pause menu")
+	return out
+
+# One Esc press: exactly one thing happens. Returns what it was.
+func escape_pressed() -> String:
+	if game_over != null:
+		last_escape = "ignored (game over)"
+		return last_escape
+	if pause_menu != null and pause_menu.paused:
+		pause_menu.resume()
+		last_escape = "resumed"
+		return last_escape
+	if close_top_panel():
+		return last_escape
+	if pause_menu != null:
+		pause_menu.toggle()
+	last_escape = "opened the pause menu"
+	return last_escape
+
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.keycode == KEY_ESCAPE):
+		return
+	# every part of the Esc key is ours: nothing below ever sees it
+	get_viewport().set_input_as_handled()
+	if not event.pressed or event.echo:
+		return
+	var frame: int = Engine.get_process_frames()
+	if frame == _esc_frame:
+		return
+	_esc_frame = frame
+	escape_pressed()
 
 # --- UI sounds -----------------------------------------------------------------------------------------------------
 

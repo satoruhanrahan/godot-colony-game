@@ -139,12 +139,21 @@ func _process(_delta: float) -> void:
 func _in_toolbox(tool: StringName) -> bool:
 	return toolbox != null and is_instance_valid(toolbox) and toolbox.kinds().has(tool)
 
+# A tool a colonist holds (taken from the toolbox for his work, or picked up) is not lost either.
+func _held_by_a_colonist(tool: StringName) -> bool:
+	if toolbox != null and is_instance_valid(toolbox) and toolbox.borrowed_by(tool) != null:
+		return true
+	for c in get_tree().get_nodes_in_group("colonists"):
+		if c.get("order_ai") != null and c.order_ai.tools != null and c.order_ai.tools.held == tool:
+			return true
+	return false
+
 func _keep_the_tools() -> void:
 	var player = get_node_or_null("MainCharacter")
 	if player == null:
 		return
 	for tool in TOOLS:
-		if player.held_tool == tool or get_tree().get_nodes_in_group(TOOL_GROUPS[tool]).size() > 0 or _in_toolbox(tool):
+		if player.held_tool == tool or get_tree().get_nodes_in_group(TOOL_GROUPS[tool]).size() > 0 or _in_toolbox(tool) or _held_by_a_colonist(tool):
 			continue
 		var spot: Vector2 = PlankPiles.free_spot(get_tree(), player.position + Vector2(14, 0), Rect2(0, 0, 640, 640), player.position)
 		PlankPiles.spawn_tool(tool, self, spot)

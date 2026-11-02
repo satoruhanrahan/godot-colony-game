@@ -126,6 +126,9 @@ func return_log(trunk: Node2D) -> void:
 func finish_log() -> void:
 	log_claimed_by = null
 	dropped_log = null
+	# (a tree whose log is used up is dealt with: its mark goes, see designation_mode.gd)
+	if is_inside_tree():
+		load("res://scripts/designation_mode.gd").clear_for(get_tree(), self)
 
 func _start_fall() -> void:
 	# Positive rotation is clockwise (tree falls right), so fall right unless

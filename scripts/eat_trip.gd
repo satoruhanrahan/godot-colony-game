@@ -330,14 +330,14 @@ func _enter_building() -> void:
 	_set_phase(Phase.IN_CRATE)
 	if room.player_inside:
 		# Seen coming in at the door and walking to the crate.
-		who.visible = true
+		who.set_body_visible(&"*", true)
 		in_room = true
 		who.position = room.door_world()
 		room.shown.append(who)
 		_walk_to(crate.use_spot())
 		_walking_in_room = true
 	else:
-		who.visible = false
+		who.set_body_visible(&"crate", false)
 		in_room = false
 		_walking_in_room = false
 		who.position = _trip_door
@@ -414,7 +414,7 @@ func _leave_building() -> void:
 	if host != null and is_instance_valid(host) and host.get("interior") != null and is_instance_valid(host.interior):
 		host.interior.shown.erase(who)
 	who.position = _trip_door + Vector2(0, 3)
-	who.visible = true
+	who.set_body_visible(&"*", true)
 	who.play("idle")
 	AudioManager.play("door", _trip_door, 1.0, -4.0)
 	in_room = false
@@ -432,7 +432,7 @@ func crate_spot() -> Vector2:
 # The player walked into the room he is eating in: he shows, standing at the crate.
 func show_in_room(spot: Vector2) -> void:
 	in_room = true
-	who.visible = true
+	who.set_body_visible(&"*", true)
 	_walking_in_room = false
 	waypoints.clear()
 	who.position = spot
@@ -441,7 +441,7 @@ func show_in_room(spot: Vector2) -> void:
 # The player left: he goes on eating at the crate, out of sight.
 func hide_from_room() -> void:
 	in_room = false
-	who.visible = false
+	who.set_body_visible(&"crate", false)
 	_walking_in_room = false
 	waypoints.clear()
 	who.position = _trip_door

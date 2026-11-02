@@ -142,15 +142,8 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
-	if event.keycode == KEY_ESCAPE:
-		if Ui.game_over != null:
-			return
-		if paused:
-			resume()
-		elif not Ui.close_top_panel():
-			toggle()
-		get_viewport().set_input_as_handled()
-	elif event.keycode == PAUSE_KEY and not event.ctrl_pressed and not event.alt_pressed:
+	# (Esc is the Ui's, in one place: Ui.escape_pressed.)
+	if event.keycode == PAUSE_KEY and not event.ctrl_pressed and not event.alt_pressed:
 		if Ui.game_over != null:
 			return
 		toggle()

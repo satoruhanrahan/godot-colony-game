@@ -19,6 +19,7 @@ const FoodConfig = preload("res://scripts/food_config.gd")
 const PlankPiles = preload("res://scripts/plank_piles.gd")
 const Items = preload("res://scripts/items.gd")
 const WorkFx = preload("res://scripts/work_fx.gd")
+const WaterMap = preload("res://scripts/water_map.gd")
 
 const TILLED: StringName = &"tilled"
 const PLANTED: StringName = &"planted"
@@ -29,6 +30,9 @@ const SOIL_TOP_RIGHT: Vector2 = Vector2(5, 0)
 const SOIL_BOTTOM_LEFT: Vector2 = Vector2(0, 5)
 
 var plots: Dictionary = {}
+# THE FARM ZONES (the "Farm zone" designation): the cells the Farmer role works, cell -> true. A zone is not used up: it stays until it is unmarked. Marking
+# a cell does not till it; it only says where the Farmer works. A marked cell that cannot be farmed (see can_farm) is kept but skipped.
+var farm_cells: Dictionary = {}
 # Who is working a cell (a colonist helping): cell -> worker. A cell has one worker at a time; see claim_cell / release_cell.
 var claims: Dictionary = {}
 # Presses of tilling so far on a bare cell (a transient: the cell becomes a plot at till_presses).
@@ -266,8 +270,92 @@ func plots_in_rect(rect: Rect2) -> bool:
 			return true
 	return false
 
-# Plots under a new building (or anything else) are removed, nothing refunded.
+# --- Farm zones ----------------------------------------------------------------------------------------------------------------------
+
+# Why this cell cannot be farmed ("" = it can): a plot already is farmed; a bare cell must be tillable (free grass: no tree, stone, building, blueprint,
+# bush, bed, item ...) and clear of the water and its bank (the 1 px ring round the cell).
+func can_farm(cell: Vector2i) -> String:
+	if plots.has(cell):
+		return ""
+	# (the answer is kept for half a second: a big zone is asked about every frame)
+	var t: int = Time.get_ticks_msec()
+	if _farm_cache.has(cell) and t - int(_farm_cache[cell][0]) < 500:
+		return _farm_cache[cell][1]
+	var why: String = can_till(cell)
+	if why == "" and WaterMap.rect_has_water(cell_rect(cell).grow(1.0)):
+		why = "Can't farm here."
+	_farm_cache[cell] = [t, why]
+	return why
+
+var _farm_cache: Dictionary = {}
+
+# Forget the kept answers (the world changed on purpose: a test, a building placed).
+func farm_cache_clear() -> void:
+	_farm_cache.clear()
+
+# Marks a cell as part of a zone; false if it was marked already or lies outside the map.
+func set_farm(cell: Vector2i) -> bool:
+	if farm_cells.has(cell) or not map_rect.encloses(cell_rect(cell)):
+		return false
+	farm_cells[cell] = true
+	return true
+
+func unset_farm(cell: Vector2i) -> bool:
+	return farm_cells.erase(cell)
+
+# The zones: groups of marked cells that touch (also diagonally). Each is an Array of cells, its first one the top-left.
+func farm_zones() -> Array:
+	var left: Dictionary = farm_cells.duplicate()
+	var out: Array = []
+	while not left.is_empty():
+		var start: Vector2i = left.keys()[0]
+		var group: Array = []
+		var queue: Array = [start]
+		left.erase(start)
+		while not queue.is_empty():
+			var at: Vector2i = queue.pop_back()
+			group.append(at)
+			for dx in range(-1, 2):
+				for dy in range(-1, 2):
+					var nb: Vector2i = at + Vector2i(dx, dy)
+					if left.has(nb):
+						left.erase(nb)
+						queue.append(nb)
+		group.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+		out.append(group)
+	return out
+
+# "2 zones, 38 cells, 12 ripe": the cells that can be farmed and how many are ripe ("" with no zone).
+func farm_summary() -> String:
+	if farm_cells.is_empty():
+		return ""
+	var farmable: int = 0
+	var ripe: int = 0
+	for cell in farm_cells.keys():
+		if can_farm(cell) == "":
+			farmable += 1
+			if stage(cell) == &"ripe":
+				ripe += 1
+	var zones: int = farm_zones().size()
+	return "%d zone%s, %d cell%s, %d ripe" % [zones, "" if zones == 1 else "s", farmable, "" if farmable == 1 else "s", ripe]
+
+# For a saved game (there is none yet): the marked cells as [[x, y], ...]; a cell that can no longer be farmed is dropped quietly when it is loaded.
+func farm_to_array() -> Array:
+	return farm_cells.keys().map(func(c: Vector2i) -> Array: return [c.x, c.y])
+
+func farm_from_array(list: Array) -> void:
+	farm_cells.clear()
+	for e in list:
+		var cell := Vector2i(int(e[0]), int(e[1]))
+		if can_farm(cell) == "":
+			farm_cells[cell] = true
+
+# Plots under a new building (or anything else) are removed, nothing refunded; so are the zone cells there.
 func clear_rect(rect: Rect2) -> int:
+	_farm_cache.clear()
+	for cell in farm_cells.keys():
+		if rect.intersects(cell_rect(cell)):
+			farm_cells.erase(cell)
 	var removed: int = 0
 	for cell in plots.keys():
 		if rect.intersects(cell_rect(cell)):

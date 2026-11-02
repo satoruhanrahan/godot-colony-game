@@ -43,6 +43,16 @@ class Job extends RefCounted:
 		return true
 	func describe() -> String:
 		return String(type)
+	# The building whose room the job works in (null = outdoors): a job inside a building goes through that building's door first; the walking
+	# itself is ColonistOrderAI.go(), which every job already walks with. By default it is where the target stands.
+	func location():
+		if target != null and is_instance_valid(target) and target is Node2D:
+			var rooms = load("res://scripts/building_interior.gd")
+			if rooms.is_interior_point(target.global_position):
+				var room = rooms.room_at(target.get_tree(), target.global_position)
+				if room != null:
+					return room.building
+		return null
 
 var jobs: Array = []
 

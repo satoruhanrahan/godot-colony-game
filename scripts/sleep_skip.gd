@@ -133,6 +133,8 @@ func _process(delta: float) -> void:
 			_alpha = minf(1.0, _alpha + real / maxf(0.01, player.fade_out_seconds))
 			if _alpha >= 1.0:
 				phase = Phase.BLACK
+				# the screen is black: the colonists who are due to sleep are put to bed in one step (see Colonist.bed_down_for_skip)
+				get_tree().call_group("colonists", "bed_down_for_skip")
 				if not _quiet:
 					AudioManager.set_quiet(player.sleep_skip_quiet_db)
 					_quiet = true

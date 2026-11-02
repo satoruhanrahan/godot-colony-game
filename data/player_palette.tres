@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PlayerPalette" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player_palette.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+; The colours of the player's art that make up his HAT and his PANTS. Written by tools/palette_report.py; correct them by editing the hex strings.
+; One flat colour is used for the hat and for the pants (no shades), and it is the same colour: it is listed in both groups and the swap tells the
+; two apart by the pixel's row (see palette_swap.gd).
+hat_hex = PackedStringArray("#484a77")
+pants_hex = PackedStringArray("#484a77")
+; The hat / pants colour of the dedicated colonist art (colonist_walk.png, colonist_asleep.png), so that art follows the palette too.
+hat_alias_hex = PackedStringArray("#b2ba90")
+pants_alias_hex = PackedStringArray("#b2ba90")
+; Colours that sit in both groups or in a group and another region (information only).
+ambiguous_hex = PackedStringArray("#484a77")

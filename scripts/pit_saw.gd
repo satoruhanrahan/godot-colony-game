@@ -69,9 +69,22 @@ var blades_delivered: int = 0
 var build_progress: int = 0
 var timer: float = 0.0
 var player = null
-var worker = null
 var player_arrived: bool = false
-var worker_arrived_flag: bool = false
+# THE PIT SAW IS A TWO-PERSON TOOL (a shared rule for any workstation that needs several people): required_operators people work it together, the player
+# at one end and required_operators - 1 colonists at the other. Only the player's E starts it (request_saw picks the helpers); nobody saws without the
+# player, and it stops the moment one of them is gone (the player walks away or presses E, a helper loses his orders or dies): the log stays in the
+# saw with the progress it has.
+@export var required_operators: int = 2
+var helpers: Array = []
+var _helpers_arrived: Array = []
+# The first helper (the one colonist of a two-person saw).
+var worker:
+	get:
+		return helpers[0] if not helpers.is_empty() else null
+	set(value):
+		helpers = [] if value == null else [value]
+# The log in the saw has been sawn part of the way (kept when sawing stops half way).
+var has_progress: bool = false
 # The saw's looping sound (AudioManager handle), and the time to the next puff of sawdust.
 var _saw_loop: int = 0
 var _sawdust_left: float = 0.0
@@ -126,13 +139,80 @@ func _process(delta: float) -> void:
 		if timer <= 0.0:
 			_finish_sawing()
 
-# The lower of the two sawyers' efficiencies (1 if there is no Rest meter); a lone sawyer's own work factor on top.
+# --- The common face of everything buildable (see Building and Logistics.blueprints()): the pit saw is dug, supplied and hammered like any
+# blueprint, so the Builder's job treats it like one. Its materials are 2 planks and a saw blade; its extra step is the digging. ---
+var claimed_by = null
+var planks_reserved: int = 0
+
+var planks_ready: int:
+	get:
+		return planks_delivered
+	set(value):
+		planks_delivered = value
+		_update_stage()
+
+var plank_cost: int:
+	get:
+		return PLANKS_REQUIRED
+
+var materials_cost: Dictionary:
+	get:
+		return {"saw_blade": BLADES_REQUIRED}
+
+var materials_ready: Dictionary:
+	get:
+		return {"saw_blade": blades_delivered}
+
+func display_name() -> String:
+	return "Pit Saw"
+
+func is_blueprint() -> bool:
+	return stage != Stage.BUILT
+
+func is_finished() -> bool:
+	return stage == Stage.BUILT
+
+func needs_digging() -> bool:
+	return can_dig()
+
+func build_total() -> int:
+	return PIT_BUILD_HITS
+
+# How many more planks still have to be brought (not counting the ones on their way).
+func planks_needed() -> int:
+	return maxi(0, planks_missing() - planks_reserved)
+
+func material_missing(kind: StringName) -> int:
+	return blades_missing() if kind == &"saw_blade" else 0
+
+func add_material(kind: StringName) -> bool:
+	return add_blade() if kind == &"saw_blade" else false
+
+func deliver_plank() -> bool:
+	return add_plank()
+
+# Everything it needs delivered is here (the hole and the hammering are separate steps).
+func is_supplied() -> bool:
+	return materials_complete()
+
+func try_claim(who) -> bool:
+	if claimed_by != null and claimed_by != who and is_instance_valid(claimed_by):
+		return false
+	claimed_by = who
+	return true
+
+func release_claim(who) -> void:
+	if claimed_by == who:
+		claimed_by = null
+
+# The lowest of the sawyers' efficiencies (1 if there is no Rest meter).
 func _saw_efficiency() -> float:
-	var e: float = solo_efficiency if solo else 1.0
+	var e: float = 1.0
 	if player != null and is_instance_valid(player) and "rest" in player and player.rest != null:
 		e = minf(e, player.rest.efficiency())
-	if worker != null and is_instance_valid(worker) and "rest" in worker and worker.rest != null:
-		e = minf(e, worker.rest.efficiency())
+	for h in helpers:
+		if is_instance_valid(h) and "rest" in h and h.rest != null:
+			e = minf(e, h.rest.efficiency())
 	return e
 
 # The world progress display (bars and pips), if the scene has one.
@@ -266,6 +346,8 @@ func _update_stage() -> void:
 			stage = Stage.MARKED
 	if stage == Stage.BUILT and before != Stage.BUILT:
 		print("Pit saw: finished (dug, supplied and hammered)")
+		if is_inside_tree():
+			load("res://scripts/designation_mode.gd").clear_for(get_tree(), self)
 		if _ready_done:
 			load("res://scripts/work_feedback.gd").completed(get_tree(), global_position)
 	_apply_stage()
@@ -296,6 +378,7 @@ func accept_log() -> bool:
 	if not can_load():
 		return false
 	state = State.LOADED
+	has_progress = false
 	loaded_log.visible = true
 	print("Pit saw loaded")
 	return true
@@ -306,103 +389,92 @@ func accept_log() -> bool:
 func request_saw(who) -> String:
 	if stage != Stage.BUILT:
 		return "The pit saw isn't finished yet"
+	if state == State.SAWING or state == State.WAITING_FOR_WORKERS:
+		return "The pit saw is in use."
 	if state != State.LOADED:
 		return "Load a log into the pit saw first"
-	var helper = _nearest_free_colonist()
-	if helper == null:
-		return _no_helper_message()
+	# The second operator (and any more the saw wants): a colonist who is free, one who waits at this saw first (the Sawyer), else the nearest.
+	var needed: int = maxi(0, required_operators - 1)
+	var found: Array = _pick_helpers(needed)
+	if found.size() < needed:
+		return "The pit saw needs %s people." % _count_word(required_operators)
 	state = State.WAITING_FOR_WORKERS
 	player = who
-	worker = helper
+	helpers = found
+	_helpers_arrived.clear()
 	player_arrived = false
-	worker_arrived_flag = false
-	helper.claim_for_work(self, colonist_spot_world())
+	for i in helpers.size():
+		helpers[i].claim_for_work(self, colonist_spot_world() + Vector2(i * 10.0, 0.0))
 	who.start_saw_walk(self)
-	print("Pit saw: %s comes to help" % helper.name)
+	print("Pit saw: %d helper(s) come" % helpers.size())
 	return ""
 
-# Colonists who are awake and not busy; not those asleep or inside, nor too tired (the Rest need),
-# nor on their way to a house or already working.
-func _nearest_free_colonist():
-	var best = null
-	var best_dist: float = INF
-	for c in get_tree().get_nodes_in_group("colonists"):
-		if not c.is_available_for_work() or c.is_too_tired_to_work():
-			continue
-		var d: float = c.position.distance_squared_to(global_position)
-		if d < best_dist:
-			best_dist = d
-			best = c
-	return best
+func _count_word(n: int) -> String:
+	return {1: "one", 2: "two", 3: "three", 4: "four"}.get(n, str(n))
 
-# Why nobody can help: someone is awake but too tired, or someone is asleep (or inside), or nobody
-# is free.
-func _no_helper_message() -> String:
-	var tired: bool = false
-	var asleep: bool = false
+# Colonists who can be the other operator: awake, free, not too tired, not dragging a log. One who is waiting at this saw comes first (the
+# Sawyer who loaded it), then the nearest. Any colonist can be one, the friend or a later settler.
+func _pick_helpers(count: int) -> Array:
+	var candidates: Array = []
 	for c in get_tree().get_nodes_in_group("colonists"):
-		if c.work_claim != null:
+		if not c.is_available_for_work() or c.is_too_tired_to_work() or c.order_ai.dragger.is_dragging():
 			continue
-		if c.is_asleep() and not c.is_available_for_work():
-			asleep = true
-		elif c.is_available_for_work() and c.is_too_tired_to_work():
-			tired = true
-	if tired:
-		return "Your friend is too tired to saw"
-	if asleep:
-		return "He's asleep"
-	return "Need a free colonist to work the saw"
+		candidates.append(c)
+	candidates.sort_custom(func(x, y) -> bool:
+		var wx: bool = is_waiting_here(x)
+		var wy: bool = is_waiting_here(y)
+		if wx != wy:
+			return wx
+		return x.position.distance_squared_to(global_position) < y.position.distance_squared_to(global_position))
+	var out: Array = []
+	for c in candidates:
+		if out.size() < count:
+			out.append(c)
+	return out
+
+# He loaded this saw (or found it loaded) and stands beside it waiting for the player.
+func is_waiting_here(c) -> bool:
+	var order_ai = c.get("order_ai")
+	return order_ai != null and order_ai.work_job != null and order_ai.work_job.get("pit") == self and order_ai.work_job.get("phase") == "wait"
 
 func player_arrived_at_spot() -> void:
 	player_arrived = true
 	_check_start()
 
 func worker_arrived(who) -> void:
-	if who == worker:
-		worker_arrived_flag = true
+	if helpers.has(who) and not _helpers_arrived.has(who):
+		_helpers_arrived.append(who)
 		_check_start()
 
 func _check_start() -> void:
-	if state == State.WAITING_FOR_WORKERS and player_arrived and worker_arrived_flag:
+	if state == State.WAITING_FOR_WORKERS and player_arrived and _helpers_arrived.size() >= helpers.size():
 		_begin_sawing()
 
-# The player walked off (or the helper went missing) before sawing began: the log stays
-# loaded, and the colonist is let go.
+# The player walked off (or a helper went missing) before sawing began, or one of them is gone while it runs: it stops, the log stays loaded (with the
+# progress it has), and everyone is let go.
 func cancel_request() -> void:
+	if state == State.SAWING:
+		stop_sawing()
+		return
 	if state != State.WAITING_FOR_WORKERS:
 		return
 	state = State.LOADED
-	if worker != null and is_instance_valid(worker):
-		worker.release_work()
-	worker = null
+	for h in helpers:
+		if is_instance_valid(h):
+			h.release_work()
+	helpers.clear()
+	_helpers_arrived.clear()
 	player = null
 
-# A colonist saws ALONE (the Sawyer role / the "saw logs" task): the log must be in (LOADED); he is hidden at the saw until it is done, at
-# `efficiency` of the pace (friend_work_efficiency). Returns false when the saw cannot start.
-var solo: bool = false
-var solo_efficiency: float = 1.0
+# A colonist who was helping lost his place (his orders changed, a role was taken away, he died).
+func helper_left(who) -> void:
+	if helpers.has(who):
+		cancel_request()
 
-func begin_solo(colonist, efficiency: float = 1.0) -> bool:
-	if stage != Stage.BUILT or state != State.LOADED:
-		return false
-	player = null
-	worker = colonist
-	solo = true
-	solo_efficiency = efficiency
-	state = State.SAWING
-	timer = PIT_SAW_TIME
-	static_sprite.visible = false
-	loaded_log.visible = false
-	in_use.visible = true
-	in_use.play("sawing")
-	_saw_loop = AudioManager.play_loop("saw_loop", global_position, 1.0, -3.0)
-	_sawdust_left = 0.0
-	colonist.hide_for_work()
-	return true
-
-# He is called away mid-saw (he is hungry, the order changes): the saw stops, the log stays in it, he is back at the saw.
-func cancel_solo(colonist) -> void:
-	if not solo or worker != colonist or state != State.SAWING:
+# Stops the saw that runs: the player stepped out (E, a movement key) or a helper is gone. The log stays in the saw, its progress kept; the player steps out
+# of the pose and the helpers at the same moment.
+func stop_sawing(_by = null) -> void:
+	if state != State.SAWING:
 		return
 	in_use.speed_scale = 1.0
 	AudioManager.stop_loop(_saw_loop)
@@ -411,25 +483,56 @@ func cancel_solo(colonist) -> void:
 	in_use.visible = false
 	static_sprite.visible = true
 	loaded_log.visible = true
-	state = State.LOADED
 	var progress = _work_progress()
 	if progress != null:
 		progress.end_time(self)
-	colonist.show_after_work(colonist_spot_world())
-	solo = false
-	worker = null
+	state = State.LOADED
+	if player != null and is_instance_valid(player):
+		player.show_after_sawing()
+	for h in helpers:
+		if is_instance_valid(h):
+			h.show_after_work(colonist_spot_world())
+			h.release_work()
+	helpers.clear()
+	_helpers_arrived.clear()
+	player = null
+	print("Pit saw: stopped, the log keeps its progress")
+
+# THE SAWING PICTURE (sawpit_in_use.png) has the sawyer drawn in the PLAYER's colours. It is shown for whoever actually saws, recoloured with HIS
+# palette (the friend when he is the Sawyer, the player in his own), by a material of its own on the picture; the operator's own body is hidden by the
+# caller for as long as the picture shows (and shown again when he leaves it) and nobody else is touched. With two sawing together the picture is the
+# player's (the colonist is not drawn, as before).
+var _pose_material: ShaderMaterial = null
+var pose_operator = null
+
+func _show_pose(operator) -> void:
+	var palette: CharacterPalette = null
+	if operator != null and "palette" in operator and operator.palette != null:
+		palette = operator.palette
+	else:
+		palette = load(PaletteList.PLAYER_PATH) as CharacterPalette
+	if _pose_material == null:
+		_pose_material = PaletteSwap.apply(in_use, palette)
+	else:
+		PaletteSwap.set_palette(_pose_material, palette)
+	pose_operator = operator
+	in_use.visible = true
+	in_use.play("sawing")
 
 func _begin_sawing() -> void:
 	state = State.SAWING
-	timer = PIT_SAW_TIME
+	# (a log sawn part of the way carries on from where it was)
+	if not has_progress:
+		timer = PIT_SAW_TIME
+	has_progress = true
 	static_sprite.visible = false
 	loaded_log.visible = false
-	in_use.visible = true
-	in_use.play("sawing")
+	_show_pose(player)
 	_saw_loop = AudioManager.play_loop("saw_loop", global_position, 1.0, -3.0)
 	_sawdust_left = 0.0
 	player.hide_for_sawing()
-	worker.hide_for_work()
+	for h in helpers:
+		h.hide_for_work()
 	print("Pit saw: sawing started")
 
 func _finish_sawing() -> void:
@@ -445,12 +548,16 @@ func _finish_sawing() -> void:
 	static_sprite.visible = true
 	if player != null and is_instance_valid(player):
 		player.show_after_sawing()
-	worker.show_after_work(colonist_spot_world())
-	# (A lone sawyer was never claimed through claim_for_work: he is simply back, in his order.)
-	if not solo:
-		worker.release_work()
-	solo = false
-	worker = null
+	for h in helpers:
+		if is_instance_valid(h):
+			h.show_after_work(colonist_spot_world())
+			h.release_work()
+			# (a Sawyer who helped has sawn a log: the "Done sawing." report counts it)
+			h.order_ai.sawn += 1
+			h.order_ai.sawn_total += 1
+	helpers.clear()
+	_helpers_arrived.clear()
+	has_progress = false
 	player = null
 	# One pile of planks (at most three), on the nearest free ground to the drop spot (up to plank_search_tiles away).
 	state = State.EMPTY

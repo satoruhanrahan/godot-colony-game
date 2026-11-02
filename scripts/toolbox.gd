@@ -81,7 +81,7 @@ func _ready() -> void:
 		sprite.texture = closed_texture
 	for entry in init_contents:
 		add_item(entry[0], entry[1] if entry.size() > 1 else 0)
-	Ui.register_closable(Callable(self, "is_panel_open"), Callable(self, "close"))
+	Ui.register_closable(Callable(self, "is_panel_open"), Callable(self, "close"), "the toolbox panel", Ui.TIER_PANEL)
 
 func is_panel_open() -> bool:
 	return is_open
@@ -115,6 +115,95 @@ func is_carried() -> bool:
 # How far each carrier stands from the box centre: half the box width plus the gap.
 func carry_end_offset_px() -> float:
 	return footprint_at(Vector2.ZERO).size.x * 0.5 + carry_end_gap_px
+
+# --- Tools lent to colonists --------------------------------------------------------------------------------------------------
+# A colonist who needs a tool RESERVES it first (reserve_tool: it stays in the box, but the panel refuses it: "Reserved by Friend."),
+# takes it when he gets here (take_reserved: it is then BORROWED, and the panel shows it greyed as "Axe (with Friend)"; clicking that row
+# asks him to bring it back) and returns it (return_tool). Both are per box, and part of its state (reservations(): kind -> who).
+
+var reserved: Dictionary = {}
+var borrowed: Dictionary = {}
+# The amount (seeds, scoops) of what take_reserved took out last.
+var last_amount: int = 0
+
+func reserved_by(kind: StringName) -> Node:
+	if reserved.has(kind) and not is_instance_valid(reserved[kind]):
+		reserved.erase(kind)
+	return reserved.get(kind)
+
+func borrowed_by(kind: StringName) -> Node:
+	if borrowed.has(kind) and not is_instance_valid(borrowed[kind]):
+		borrowed.erase(kind)
+	return borrowed.get(kind)
+
+# A tool that is in the box and nobody has reserved.
+func tool_free(kind: StringName) -> bool:
+	return kinds().has(kind) and reserved_by(kind) == null
+
+func reserve_tool(kind: StringName, who: Node) -> bool:
+	if not kinds().has(kind):
+		return false
+	var holder: Node = reserved_by(kind)
+	if holder != null and holder != who:
+		return false
+	reserved[kind] = who
+	_refresh()
+	return true
+
+func release_tool(kind: StringName, who: Node) -> void:
+	if reserved.get(kind) == who:
+		reserved.erase(kind)
+		_refresh()
+
+# The reserving colonist takes the tool out: it is lent to him. False if it is not his or not there.
+func take_reserved(kind: StringName, who: Node) -> bool:
+	if reserved_by(kind) != who:
+		return false
+	var idx: int = kinds().find(kind)
+	if idx < 0:
+		reserved.erase(kind)
+		return false
+	# (of several seed bags the fullest comes out first)
+	if kind == &"seed_bag":
+		var best: int = -1
+		for i in contents.size():
+			if contents[i]["kind"] == kind and int(contents[i]["amount"]) > best:
+				best = int(contents[i]["amount"])
+				idx = i
+	last_amount = int(contents[idx]["amount"])
+	take_item(idx)
+	reserved.erase(kind)
+	borrowed[kind] = who
+	_refresh()
+	return true
+
+# He puts it back (false when the box has no room for it).
+func return_tool(kind: StringName, who: Node, amount: int = 0) -> bool:
+	if not add_item(kind, amount):
+		return false
+	if borrowed.get(kind) == who:
+		borrowed.erase(kind)
+	_refresh()
+	return true
+
+# He lost it (it was put down somewhere else): it is no longer lent.
+func forget_borrowed(kind: StringName, who: Node) -> void:
+	if borrowed.get(kind) == who:
+		borrowed.erase(kind)
+		_refresh()
+
+# The lid opens for a moment (a colonist takes or puts back a tool): the open picture and the sounds, then closed again.
+func flash_open(seconds: float) -> void:
+	if is_open:
+		return
+	if open_texture != null:
+		sprite.texture = open_texture
+	AudioManager.play("toolbox_open", global_position)
+	await get_tree().create_timer(seconds).timeout
+	if is_instance_valid(self) and not is_open:
+		if closed_texture != null:
+			sprite.texture = closed_texture
+		AudioManager.play("toolbox_close", global_position)
 
 # --- Being carried -------------------------------------------------------------------------------------------------
 
@@ -352,8 +441,23 @@ func _unhandled_input(event: InputEvent) -> void:
 # The player takes slot `index`: into the hands as if picked up; a swap when the hands hold something the box takes.
 func take_with_player(index: int) -> String:
 	var player: Node = get_tree().get_first_node_in_group("player")
+	var hud_now: Node = get_tree().get_first_node_in_group("hud")
+	# a borrowed tool (the greyed rows after the contents): ask for it back
+	if index >= contents.size() and index < contents.size() + borrowed.size():
+		var kind_out: StringName = borrowed.keys()[index - contents.size()]
+		var who: Node = borrowed_by(kind_out)
+		if who != null and who.has_method("recall_tool"):
+			who.recall_tool()
+			if hud_now != null:
+				hud_now.say("%s: I will bring the %s back." % [who.display_name, String(kind_out).replace("_", " ")])
+		return ""
 	if player == null or index < 0 or index >= contents.size():
 		return ""
+	var holder: Node = reserved_by(contents[index]["kind"])
+	if holder != null:
+		if hud_now != null:
+			hud_now.say("Reserved by %s." % holder.display_name)
+		return "Reserved by %s." % holder.display_name
 	var msg: String = player.toolbox_take(self, index)
 	if msg != "":
 		var hud: Node = get_tree().get_first_node_in_group("hud")
@@ -491,7 +595,7 @@ func _build_panel() -> void:
 	_place_panel()
 
 func _on_slot_input(event: InputEvent, index: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and index < contents.size():
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and index < contents.size() + borrowed.size():
 		Ui.sfx("ui_click")
 		take_with_player(index)
 
@@ -531,6 +635,23 @@ func _refresh() -> void:
 		return
 	for i in _slot_nodes.size():
 		var nodes: Dictionary = _slot_nodes[i]
+		if i >= contents.size() and i < contents.size() + borrowed.size():
+			# a tool lent out: greyed, "Axe (with Friend)"
+			var out_kind: StringName = borrowed.keys()[i - contents.size()]
+			var out_who: Node = borrowed_by(out_kind)
+			var out_tex: Texture2D = _icon_of(out_kind)
+			var out_icon: TextureRect = nodes["icon"]
+			out_icon.texture = out_tex
+			if out_tex != null:
+				var out_holder: Control = nodes["holder"]
+				var out_box: Vector2 = out_holder.custom_minimum_size
+				var out_factor: float = float(maxi(1, floori(minf(out_box.x / out_tex.get_width(), out_box.y / out_tex.get_height()))))
+				out_icon.size = out_tex.get_size() * out_factor
+				out_icon.position = ((out_box - out_icon.size) * 0.5).round()
+			nodes["name"].text = "%s (with %s)" % [_display_name(out_kind), out_who.display_name if out_who != null else "?"]
+			nodes["count"].text = "bring back"
+			nodes["slot"].modulate = Color(1, 1, 1, 0.5)
+			continue
 		if i < contents.size():
 			var entry: Dictionary = contents[i]
 			var tex: Texture2D = _icon_of(entry["kind"])
@@ -548,6 +669,10 @@ func _refresh() -> void:
 			nodes["name"].text = label
 			nodes["count"].text = ("%d   x%d" % [i + 1, entry["count"]]) if int(entry["count"]) > 1 else str(i + 1)
 			nodes["slot"].modulate = Color.WHITE
+			var lent_to: Node = reserved_by(entry["kind"])
+			if lent_to != null:
+				nodes["name"].text = "%s\nReserved by %s" % [nodes["name"].text, lent_to.display_name]
+				nodes["slot"].modulate = Color(1, 1, 1, 0.6)
 		else:
 			nodes["icon"].texture = null
 			nodes["name"].text = ""

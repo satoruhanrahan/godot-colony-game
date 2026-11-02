@@ -34,19 +34,22 @@ const DESCRIPTIONS: Dictionary = {
 }
 
 # The work roles (standing orders): what he does by himself while there is work for it, in this priority order (the order of `roles`).
-const ROLES: Array[StringName] = [&"lumberjack", &"sawyer", &"hauler", &"builder"]
-const ROLE_NAMES: Dictionary = {&"lumberjack": "Lumberjack", &"sawyer": "Sawyer", &"hauler": "Hauler", &"builder": "Builder"}
+const ROLES: Array[StringName] = [&"lumberjack", &"sawyer", &"hauler", &"builder", &"farmer", &"cook"]
+const ROLE_NAMES: Dictionary = {&"lumberjack": "Lumberjack", &"sawyer": "Sawyer", &"hauler": "Hauler", &"builder": "Builder", &"farmer": "Farmer", &"cook": "Cook"}
 const ROLE_DESCRIPTIONS: Dictionary = {
 	&"lumberjack": "Fells and trims trees nearby, drags the logs to the saw or Storage.",
 	&"sawyer": "Takes logs to the pit saw, saws them into planks and stacks them.",
 	&"hauler": "Carries loose logs, planks and food to Storage and crates.",
 	&"builder": "Brings materials to blueprints and hammers them.",
+	&"farmer": "Works the farm zones: harvests, waters, sows and tills.",
+	&"cook": "Grinds wheat, makes dough, bakes flatbread until there is enough.",
 }
 # The designated tasks (specific, one-off orders; see designation_mode.gd). Each task is a dictionary:
 #   {"type": &"chop", "trees": [tree nodes], "done": 0}      {"type": &"saw", "saw": pit saw node, "done": 0}
 #   {"type": &"haul", "zone": Rect2, "done": 0}               {"type": &"build", "blueprints": [blueprint nodes], "done": 0}
-const TASK_TYPES: Array[StringName] = [&"chop", &"saw", &"haul", &"build"]
-const TASK_NAMES: Dictionary = {&"chop": "Chop these trees", &"saw": "Saw logs into planks", &"haul": "Haul to storage", &"build": "Build these"}
+# ("farm" is a designation too, but its zones belong to the field, not to one colonist: they live in the PlotManager, see plot_manager.gd.)
+const TASK_TYPES: Array[StringName] = [&"chop", &"saw", &"haul", &"build", &"farm"]
+const TASK_NAMES: Dictionary = {&"chop": "Chop these trees", &"saw": "Saw logs into planks", &"haul": "Haul to storage", &"build": "Build these", &"farm": "Farm zone"}
 
 var stance: Stance = Stance.FREE
 var post: Vector2 = Vector2.INF
