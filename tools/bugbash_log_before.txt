@@ -1,0 +1,300 @@
+# Bug-bash log: first pass BEFORE the fixes (seeds 1 and 2)
+
+######## bugbash_run1_a.txt
+[bugbash] bug-bash start: scenarios [1], states ["fresh"], 10 game minutes each, speed x5.0, seed 1, log res://tools/bugbash_run1_a.txt
+[bugbash] run 1: S1-lumberjack on the fresh start, roles [&"lumberjack"]
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S1-sawyer on the fresh start, roles [&"sawyer"]
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S1-builder on the fresh start, roles [&"builder"]
+[bugbash] run 3 done: 600 game seconds in 120 real seconds
+[bugbash] run 4: S1-hauler on the fresh start, roles [&"hauler"]
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S1-farmer on the fresh start, roles [&"farmer"]
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'sow' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'scoop' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'harvest' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'thresh' (the player has none yet): standing with what he holds instead 
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S1-cook on the fresh start, roles [&"cook"]
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: total 0 categories failing of 9; 0 distinct problems; 0 occurrences
+[bugbash] per scenario (category: occurrences): {  }
+
+######## bugbash_run1_b.txt
+[bugbash] bug-bash start: scenarios [1], states ["big"], 10 game minutes each, speed x5.0, seed 1, log res://tools/bugbash_run1_b.txt
+[bugbash] run 1: S1-lumberjack on the big start, roles [&"lumberjack"]
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S1-sawyer on the big start, roles [&"sawyer"]
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S1-builder on the big start, roles [&"builder"]
+PROBLEM [invisible] he is outside the map at (-18, 78)
+    day 1 10:10 | S1-builder/big | run 3 | role=builder task=[] stance=Free time pos=(-18,78) state=ORDERED job='Hammering House' held='hammer' carry=''
+[bugbash] run 3 done: 600 game seconds in 120 real seconds
+[bugbash] run 4: S1-hauler on the big start, roles [&"hauler"]
+PROBLEM [jobs] he says 'Nowhere to store it.' but a log has a place
+    day 1 05:23 | S1-hauler/big | run 4 | role=hauler task=[] stance=Free time pos=(194,118) state=ORDERED job='Going for a log' held='' carry=''
+PROBLEM [jobs] the job 'Going for a log' was started 6 times in a minute without a single strike
+    day 1 07:04 | S1-hauler/big | run 4 | role=hauler task=[] stance=Free time pos=(554,393) state=ORDERED job='Going for a log' held='' carry=''
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S1-farmer on the big start, roles [&"farmer"]
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'sow' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'thresh' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'scoop' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'harvest' (the player has none yet): standing with what he holds instead 
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S1-cook on the big start, roles [&"cook"]
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind_in' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'pour' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'knead' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'spark' (the player has none yet): standing with what he holds instead 
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  FAIL (1 distinct problems, 49 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       FAIL (2 distinct problems, 167 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: total 2 categories failing of 9; 3 distinct problems; 216 occurrences
+[bugbash] per scenario (category: occurrences): { "S1-builder/big": { "invisible": 49 }, "S1-hauler/big": { "jobs": 167 } }
+
+######## bugbash_run1_c.txt
+[bugbash] bug-bash start: scenarios [2, 3, 4, 5, 6, 7], states ["fresh"], 10 game minutes each, speed x5.0, seed 1, log res://tools/bugbash_run1_c.txt
+[bugbash] run 1: S2 on the fresh start, roles []
+PROBLEM [needs] energy is 0 for 12 s and he is not sleeping or on his way to bed
+    day 2 00:12 | S2/fresh | run 1 | role=builder task=[] stance=Free time pos=(126,342) state=ORDERED job='-' held='' carry=''
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S3 on the fresh start, roles [&"lumberjack", &"builder"]
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S4 on the fresh start, roles [&"lumberjack", &"farmer"]
+[bugbash] run 3 done: 912 game seconds in 81 real seconds
+[bugbash] run 4: S5 on the fresh start, roles [&"lumberjack", &"builder", &"farmer", &"cook"]
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S6 on the fresh start, roles [&"builder", &"hauler"]
+PROBLEM [jobs] he says 'Nowhere to store it.' but a log has a place
+    day 1 06:45 | S6/fresh | run 5 | role=builder,hauler task=[] stance=Free time pos=(136,122) state=ORDERED job='Putting the hammer back' held='hammer' carry=''
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S7 on the fresh start, roles [&"sawyer"]
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       FAIL (1 distinct problems, 29 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      FAIL (1 distinct problems, 106 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: total 2 categories failing of 9; 2 distinct problems; 135 occurrences
+[bugbash] per scenario (category: occurrences): { "S2/fresh": { "needs": 106 }, "S6/fresh": { "jobs": 29 } }
+
+######## bugbash_run1_d.txt
+[bugbash] bug-bash start: scenarios [2, 3, 4, 5, 6, 7], states ["big"], 10 game minutes each, speed x5.0, seed 1, log res://tools/bugbash_run1_d.txt
+[bugbash] run 1: S2 on the big start, roles []
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind_in' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'scoop' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'pour' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'knead' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'sow' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'spark' (the player has none yet): standing with what he holds instead 
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S3 on the big start, roles [&"lumberjack", &"builder"]
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S4 on the big start, roles [&"lumberjack", &"farmer"]
+[bugbash] run 3 done: 600 game seconds in 421 real seconds
+[bugbash] run 4: S5 on the big start, roles [&"lumberjack", &"builder", &"farmer", &"cook"]
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S6 on the big start, roles [&"builder", &"hauler"]
+PROBLEM [invisible] he is outside the map at (-18, 78)
+    day 1 10:10 | S6/big | run 5 | role=builder,hauler task=[] stance=Free time pos=(-18,78) state=ORDERED job='Hammering House' held='hammer' carry=''
+PROBLEM [jobs] he says 'Nowhere to store it.' but a log has a place
+    day 1 13:27 | S6/big | run 5 | role=builder,hauler task=[] stance=Free time pos=(6173,102) state=ORDERED job='Putting the hammer away' held='hammer' carry=''
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S7 on the big start, roles [&"sawyer"]
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  FAIL (1 distinct problems, 48 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       FAIL (1 distinct problems, 52 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: total 2 categories failing of 9; 2 distinct problems; 100 occurrences
+[bugbash] per scenario (category: occurrences): { "S6/big": { "invisible": 48, "jobs": 52 } }
+
+######## bugbash_run1s2_a.txt
+[bugbash] bug-bash start: scenarios [1], states ["fresh"], 10 game minutes each, speed x5.0, seed 2, log res://tools/bugbash_run1s2_a.txt
+[bugbash] run 1: S1-lumberjack on the fresh start, roles [&"lumberjack"]
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S1-sawyer on the fresh start, roles [&"sawyer"]
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S1-builder on the fresh start, roles [&"builder"]
+[bugbash] run 3 done: 600 game seconds in 120 real seconds
+[bugbash] run 4: S1-hauler on the fresh start, roles [&"hauler"]
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S1-farmer on the fresh start, roles [&"farmer"]
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'sow' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'scoop' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'harvest' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'thresh' (the player has none yet): standing with what he holds instead 
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S1-cook on the fresh start, roles [&"cook"]
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: total 0 categories failing of 9; 0 distinct problems; 0 occurrences
+[bugbash] per scenario (category: occurrences): {  }
+
+######## bugbash_run1s2_b.txt
+[bugbash] bug-bash start: scenarios [1], states ["big"], 10 game minutes each, speed x5.0, seed 2, log res://tools/bugbash_run1s2_b.txt
+[bugbash] run 1: S1-lumberjack on the big start, roles [&"lumberjack"]
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S1-sawyer on the big start, roles [&"sawyer"]
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S1-builder on the big start, roles [&"builder"]
+PROBLEM [invisible] he is outside the map at (-18, 78)
+    day 1 10:10 | S1-builder/big | run 3 | role=builder task=[] stance=Free time pos=(-18,78) state=ORDERED job='Hammering House' held='hammer' carry=''
+[bugbash] run 3 done: 600 game seconds in 120 real seconds
+[bugbash] run 4: S1-hauler on the big start, roles [&"hauler"]
+PROBLEM [jobs] he says 'Nowhere to store it.' but a log has a place
+    day 1 05:22 | S1-hauler/big | run 4 | role=hauler task=[] stance=Free time pos=(169,116) state=ORDERED job='Going for a log' held='' carry=''
+PROBLEM [jobs] the job 'Going for a log' was started 6 times in a minute without a single strike
+    day 1 15:23 | S1-hauler/big | run 4 | role=hauler task=[] stance=Free time pos=(522,388) state=ORDERED job='Going for a log' held='' carry=''
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S1-farmer on the big start, roles [&"farmer"]
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'sow' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'thresh' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'scoop' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'harvest' (the player has none yet): standing with what he holds instead 
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S1-cook on the big start, roles [&"cook"]
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind_in' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'pour' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'knead' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'spark' (the player has none yet): standing with what he holds instead 
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  FAIL (1 distinct problems, 48 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       FAIL (2 distinct problems, 154 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: total 2 categories failing of 9; 3 distinct problems; 202 occurrences
+[bugbash] per scenario (category: occurrences): { "S1-builder/big": { "invisible": 48 }, "S1-hauler/big": { "jobs": 154 } }
+
+######## bugbash_run1s2_c.txt
+[bugbash] bug-bash start: scenarios [2, 3, 4, 5, 6, 7], states ["fresh"], 10 game minutes each, speed x5.0, seed 2, log res://tools/bugbash_run1s2_c.txt
+[bugbash] run 1: S2 on the fresh start, roles []
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'sow' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'harvest' (the player has none yet): standing with what he holds instead 
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S3 on the fresh start, roles [&"lumberjack", &"builder"]
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S4 on the fresh start, roles [&"lumberjack", &"farmer"]
+[bugbash] run 3 done: 600 game seconds in 133 real seconds
+[bugbash] run 4: S5 on the fresh start, roles [&"lumberjack", &"builder", &"farmer", &"cook"]
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S6 on the fresh start, roles [&"builder", &"hauler"]
+PROBLEM [jobs] he says 'Nowhere to store it.' but a log has a place
+    day 1 08:35 | S6/fresh | run 5 | role=builder,hauler task=[] stance=Free time pos=(2459,134) state=ORDERED job='Putting the hammer back' held='hammer' carry=''
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S7 on the fresh start, roles [&"sawyer"]
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       FAIL (1 distinct problems, 29 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: total 1 categories failing of 9; 1 distinct problems; 29 occurrences
+[bugbash] per scenario (category: occurrences): { "S6/fresh": { "jobs": 29 } }
+
+######## bugbash_run1s2_d.txt
+[bugbash] bug-bash start: scenarios [2, 3, 4, 5, 6, 7], states ["big"], 10 game minutes each, speed x5.0, seed 2, log res://tools/bugbash_run1s2_d.txt
+[bugbash] run 1: S2 on the big start, roles []
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'till' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind_in' (the player has none yet): standing with what he holds instead 
+[bugbash] missing art (once): variant_utility.cpp:1033 CharacterAnimator: no animation for the work 'grind' (the player has none yet): standing with what he holds instead 
+PROBLEM [jobs] he says 'Nowhere to store it.' but a log has a place
+    day 2 00:33 | S2/big | run 1 | role=hauler,lumberjack task=[] stance=Free time pos=(88,158) state=ORDERED job='Chopping a tree' held='' carry=''
+PROBLEM [invisible] he is outside the map at (-18, 78)
+    day 2 01:32 | S2/big | run 1 | role=builder task=[] stance=Free time pos=(-18,78) state=ORDERED job='Hammering House' held='hammer' carry=''
+[bugbash] run 1 done: 600 game seconds in 120 real seconds
+[bugbash] run 2: S3 on the big start, roles [&"lumberjack", &"builder"]
+[bugbash] run 2 done: 600 game seconds in 120 real seconds
+[bugbash] run 3: S4 on the big start, roles [&"lumberjack", &"farmer"]
+PROBLEM [needs] energy is 0 for 12 s and he is not sleeping or on his way to bed
+    day 1 17:19 | S4/big | run 3 | role=lumberjack,farmer task=[] stance=Free time pos=(155,82) state=ORDERED job='-' held='' carry=''
+[bugbash] run 3 done: 912 game seconds in 762 real seconds
+[bugbash] run 4: S5 on the big start, roles [&"lumberjack", &"builder", &"farmer", &"cook"]
+[bugbash] run 4 done: 600 game seconds in 120 real seconds
+[bugbash] run 5: S6 on the big start, roles [&"builder", &"hauler"]
+PROBLEM [errors] error: node.cpp:1721 Condition "data.blocked > 0" is true. Parent node is busy setting up children, `add_child()` failed. Consider using `add_child.call_deferred(child)` instead.
+    day 1 04:49 | S6/big | run 5 | role=builder,hauler task=[] stance=Free time pos=(172,169) state=MOVING_IN job='-' held='' carry=''
+[bugbash] run 5 done: 600 game seconds in 120 real seconds
+[bugbash] run 6: S7 on the big start, roles [&"sawyer"]
+[bugbash] run 6 done: 600 game seconds in 120 real seconds
+
+[bugbash] === RESULT (6 runs) ===
+SELF-CHECK: invisible  FAIL (1 distinct problems, 98 occurrences)
+SELF-CHECK: stuck      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: items      OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: claims     OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: jobs       FAIL (1 distinct problems, 103 occurrences)
+SELF-CHECK: animation  OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: needs      FAIL (1 distinct problems, 283 occurrences)
+SELF-CHECK: ui         OK (0 distinct problems, 0 occurrences)
+SELF-CHECK: errors     FAIL (1 distinct problems, 2 occurrences)
+SELF-CHECK: total 4 categories failing of 9; 4 distinct problems; 486 occurrences
+[bugbash] per scenario (category: occurrences): { "S2/big": { "jobs": 39, "invisible": 49 }, "S4/big": { "needs": 283 }, "S6/big": { "errors": 2, "invisible": 49, "jobs": 64 } }

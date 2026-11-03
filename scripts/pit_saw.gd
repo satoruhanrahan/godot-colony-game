@@ -13,6 +13,7 @@ extends Node2D
 # jumps when they swap.
 
 const PlankPiles = preload("res://scripts/plank_piles.gd")
+const Logistics = preload("res://scripts/logistics.gd")
 const GroundPlacement = preload("res://scripts/ground_placement.gd")
 
 enum State { EMPTY, LOADED, WAITING_FOR_WORKERS, SAWING }
@@ -248,7 +249,7 @@ func can_dig() -> bool:
 	return dig_count < DIG_HITS
 
 func dig_spot_world() -> Vector2:
-	return global_position + dig_spot
+	return Logistics.beside_spot(global_position, dig_spot)
 
 # One dig (the shovel strike).
 func dig() -> void:
@@ -275,7 +276,7 @@ func ready_to_build() -> bool:
 	return not can_dig() and materials_complete() and not is_built()
 
 func hammer_spot_world() -> Vector2:
-	return global_position + hammer_spot
+	return Logistics.beside_spot(global_position, hammer_spot)
 
 # One hammer blow (the strike frame). Only once it is ready to build.
 func hammer_hit() -> void:

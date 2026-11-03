@@ -4741,10 +4741,16 @@ func _c7_failures(world: Node, friend, player) -> void:
 	friend.orders.toggle_role(&"lumberjack")
 	await _c7_wait(func() -> bool: return ai.work_job != null, 5.0)
 	ai.stuck_events += 5
-	await get_tree().create_timer(2.5).timeout
+	# (the reason is on his hover line only until he starts a different job, such as putting the axe back: read it the moment it is said)
+	var seen_d: Array = [""]
+	await _c7_wait(func() -> bool:
+		if ai.fail_text != "":
+			seen_d[0] = ai.fail_text
+		return int(ai.said_count.get("unreachable_tree", 0)) >= 1, 2.5)
+	await get_tree().create_timer(0.5).timeout
 	var said_d: int = int(ai.said_count.get("unreachable_tree", 0))
-	lines.append("'%s' said %d time(s), tree skipped %s and free %s" % [ai.fail_text, said_d, ai.is_skipped(tr), tr.claimed_by == null])
-	ok = ok and said_d == 1 and ai.fail_text == "Cannot reach the tree." and ai.is_skipped(tr) and tr.claimed_by == null
+	lines.append("'%s' said %d time(s), tree skipped %s and free %s" % [seen_d[0], said_d, ai.is_skipped(tr), tr.claimed_by == null])
+	ok = ok and said_d == 1 and seen_d[0] == "Cannot reach the tree." and ai.is_skipped(tr) and tr.claimed_by == null
 	friend.orders.clear_work()
 	ai.release_all(true)
 	_c7_cleanup([tr])

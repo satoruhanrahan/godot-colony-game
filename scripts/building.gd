@@ -1,5 +1,6 @@
 class_name Building
 extends Sprite2D
+const Logistics = preload("res://scripts/logistics.gd")
 
 enum State { WAITING, BUILDING, BUILT }
 # What a house has to sleep on. NONE is the bare wooden floor; hay and proper beds are made by the
@@ -194,7 +195,8 @@ func release_claim(who) -> void:
 
 # Where to stand to hammer it by hand.
 func hammer_spot_world() -> Vector2:
-	return global_position + Vector2(hammer_spot.x - (footprint.x - 1) * 16.0, hammer_spot.y)
+	# (a building that already stands at the edge of the map: the left end of it would be outside the map, so the right end is used)
+	return Logistics.beside_spot(global_position, Vector2(hammer_spot.x - (footprint.x - 1) * 16.0, hammer_spot.y))
 
 func interact_point() -> Vector2:
 	return global_position + Vector2(0, -6)

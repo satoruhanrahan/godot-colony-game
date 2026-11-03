@@ -189,6 +189,9 @@ func ensure(who, kind: StringName, delta: float) -> int:
 		return 0
 	# reserve
 	if _res.is_empty() or _res.get("kind", &"") != kind:
+		# (a reservation for another tool that was never used is let go first: the box must not stay "reserved by Friend")
+		if not _res.is_empty():
+			release_reservation()
 		var src: Dictionary = source_for(kind)
 		if src["type"] == "none":
 			ai.fail("tool_" + String(kind), why_none(kind))
@@ -268,21 +271,45 @@ func holding() -> bool:
 func touch() -> void:
 	idle = 0.0
 
-# Every frame (whatever he is doing): how long since the tool was used; a return that never gets done gives up after a while (he drops it).
+# Every frame (whatever he is doing): how long since the tool was used. A return that never gets done gives up after a while: the tool STAYS in his hands
+# ("Hands full", said once); it is never put on the ground because of a timer. Only time he is really at it AND getting nowhere counts (put_away ran last frame
+# and he did not move): not while he eats, sleeps, talks or is held by a panel, and not on a long, slow walk to the box (a tired colonist crossing the map).
+const RETURN_GIVE_UP_SECONDS: float = 40.0
+const RETURN_MIN_SPEED: float = 4.0
 var _force_time: float = 0.0
+var _putting_away: bool = false
+var _pos_prev: Vector2 = Vector2.ZERO
+
+var _res_idle: float = 0.0
 
 func tick_idle(delta: float) -> void:
+	var moved: bool = c.position.distance_to(_pos_prev) > RETURN_MIN_SPEED * delta
+	_pos_prev = c.position
+	# a reservation with no job behind it (the job was dropped or the role changed while he was on his way): let go after a moment
+	if not _res.is_empty() and _taking < 0.0 and ai.work_job == null and ai.job.is_empty() and ai.assist_cook == null:
+		_res_idle += delta
+		if _res_idle > 3.0:
+			release_reservation()
+			_res_idle = 0.0
+	else:
+		_res_idle = 0.0
 	if held != &"":
 		idle += delta
 		if force_return:
-			_force_time += delta
-			if _force_time > 40.0:
+			if moved:
+				_force_time = 0.0
+			elif _putting_away:
+				_force_time += delta
+			if _force_time > RETURN_GIVE_UP_SECONDS and not return_gave_up:
 				return_gave_up = true
-				drop_here("he could not put it back for %d seconds" % int(_force_time))
+				force_return = false
+				_force_time = 0.0
+				ai.fail("hands_full", "Hands full")
 		else:
 			_force_time = 0.0
 	else:
 		_force_time = 0.0
+	_putting_away = false
 
 # The tools his roles and tasks can use at all (what he would keep for): empty when his stance pauses the work.
 func needed_tools() -> Array:
@@ -338,6 +365,8 @@ func wants_return() -> bool:
 # The player asks for it back (the greyed row in the toolbox panel).
 func recall() -> void:
 	if held != &"":
+		return_gave_up = false
+		_force_time = 0.0
 		force_return = true
 		recall_after_strikes = ai.strikes
 
@@ -379,6 +408,7 @@ func put_away(who, delta: float) -> bool:
 		return true
 	# (putting it away is handling it: the idle clock that sends a tool home must not run out on the way to the box, or the job in hand is dropped)
 	touch()
+	_putting_away = true
 	if _pa_acting >= 0.0:
 		ai.working = false
 		_pa_acting -= delta

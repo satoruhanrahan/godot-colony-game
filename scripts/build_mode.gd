@@ -3,6 +3,7 @@ extends Node2D
 const BUILDING_SCENE: PackedScene = preload("res://scenes/Building.tscn")
 const CELL: int = 32
 const PlankPiles = preload("res://scripts/plank_piles.gd")
+const Logistics = preload("res://scripts/logistics.gd")
 const GroundPlacement = preload("res://scripts/ground_placement.gd")
 const WaterMap = preload("res://scripts/water_map.gd")
 
@@ -20,6 +21,13 @@ const WaterMap = preload("res://scripts/water_map.gd")
 # Room kept round the footprint (px), and the walking strip in front of every door (px deep and wide).
 @export var placement_margin_px: float = 2.0
 @export var door_clearance_px: float = 24.0
+# The spot in front of a building (where builders stand to hand things over and where tools are used) must lie this many cells inside the map (a new
+# building is not placed closer to the edge); in a room the same rule holds against the floor, with one route cell (px) as the margin (a floor is small).
+@export var edge_margin_cells: int = 1
+@export var room_edge_margin_px: float = 8.0
+# In front of an object on a floor (the crate's use_spot).
+const ROOM_FRONT_OFFSET: Vector2 = Vector2(0, 7)
+const EDGE_TEXT: String = "Too close to the edge."
 # The key named in the Build button's text ("Build (B)"). The key itself is B.
 @export var shortcut_hint: String = "B"
 
@@ -317,6 +325,11 @@ func check_indoor(type: BuildingType, origin: Vector2, throttled: bool) -> Dicti
 	var grown: Rect2 = cover.grow(placement_margin_px)
 	if not room.floor_rect_world().encloses(cover):
 		return {"ok": false, "amber": false, "text": "Keep it on the floor."}
+	# (a spot to stand at in front of it, on the floor too)
+	var floor_inner: Rect2 = room.floor_rect_world().grow(-room_edge_margin_px)
+	var front: Vector2 = origin + ROOM_FRONT_OFFSET
+	if front.x < floor_inner.position.x or front.x > floor_inner.end.x or front.y < floor_inner.position.y or front.y > floor_inner.end.y:
+		return {"ok": false, "amber": false, "text": EDGE_TEXT}
 	if grown.intersects(door_strip(room.door_world())) or grown.intersects(room.door_clear_rect_world()):
 		return {"ok": false, "amber": false, "text": "Too close to the door."}
 	if room.object_overlaps(grown) or PlankPiles.item_in_rect(get_tree(), grown):
@@ -325,6 +338,11 @@ func check_indoor(type: BuildingType, origin: Vector2, throttled: bool) -> Dicti
 	if not type.flat_decal and room.blocks_route(base_rect_at(type, origin), throttled):
 		return {"ok": false, "amber": false, "text": "Would block the way."}
 	return {"ok": true, "amber": false, "text": ""}
+
+# Is a person's spot in front of a new outdoor building far enough inside the map?
+func front_spot_ok(spot: Vector2) -> bool:
+	var inner: Rect2 = map_rect.grow(-edge_margin_cells * CELL)
+	return spot.x >= inner.position.x and spot.x <= inner.end.x and spot.y >= inner.position.y and spot.y <= inner.end.y
 
 # The origin (bottom centre) of the ghost: the exact pixel under the cursor with the footprint centred on it; with the snap key
 # held it is the grid cell as before.
@@ -367,6 +385,8 @@ func check_outdoor(type: BuildingType, origin: Vector2, throttled: bool) -> Dict
 	var grown: Rect2 = rect.grow(placement_margin_px)
 	if not map_rect.encloses(rect):
 		return {"ok": false, "amber": false, "text": "Something is in the way."}
+	if not front_spot_ok(origin + Logistics.BUILDING_STOP_OFFSET):
+		return {"ok": false, "amber": false, "text": EDGE_TEXT}
 	if WaterMap.rect_has_water(grown):
 		return {"ok": false, "amber": false, "text": "Can't build on water."}
 	if Footprints.rect_blocked(get_tree(), grown) or PlankPiles.item_in_rect(get_tree(), grown):
@@ -397,6 +417,8 @@ func check_object(rect: Rect2, base: Rect2, ignore: Node, throttled: bool) -> Di
 	var grown: Rect2 = rect.grow(placement_margin_px)
 	if not map_rect.encloses(rect):
 		return {"ok": false, "amber": false, "text": "Something is in the way."}
+	if not front_spot_ok(Vector2(rect.get_center().x, rect.end.y) + ROOM_FRONT_OFFSET):
+		return {"ok": false, "amber": false, "text": EDGE_TEXT}
 	if WaterMap.rect_has_water(grown):
 		return {"ok": false, "amber": false, "text": "Can't build on water."}
 	if Footprints.rect_blocked(get_tree(), grown) or PlankPiles.item_in_rect(get_tree(), grown):

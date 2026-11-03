@@ -881,7 +881,7 @@ class BuildJob extends WorkJob:
 	func _hand_over_spot() -> Vector2:
 		if _room != null and is_instance_valid(_room):
 			return _room_spot
-		return (bp.global_position + Logistics.BUILDING_STOP_OFFSET).round()
+		return Logistics.front_spot(bp.global_position).round()
 
 	func _deliver(delta: float) -> bool:
 		# (His hands hold the piece, so no tool: the hammer is fetched once everything is delivered and the blueprint can be hammered.)
@@ -1037,6 +1037,9 @@ class ReturnToolJob extends WorkJob:
 
 	func execute(colonist, delta: float) -> bool:
 		if not ai.tools.holding():
+			return true
+		# (he gave up putting it back: it stays in his hands, "Hands full" has been said)
+		if ai.tools.return_gave_up:
 			return true
 		return ai.tools.put_away(self, delta)
 

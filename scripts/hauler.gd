@@ -14,6 +14,7 @@ const BUILDING_STOP_OFFSET: Vector2 = Vector2(0, 31)
 const STORAGE_STOP_OFFSET: Vector2 = Vector2(0, 16)
 
 const WorkerRest = preload("res://scripts/worker_rest.gd")
+const Logistics = preload("res://scripts/logistics.gd")
 const WaterMap = preload("res://scripts/water_map.gd")
 const WaterWalker = preload("res://scripts/water_walker.gd")
 var _walker = WaterWalker.new()
@@ -321,7 +322,7 @@ func _place_stop(place: Place) -> Vector2:
 			return storage.position + STORAGE_STOP_OFFSET
 		Place.YARD:
 			return plank_yard.global_position
-	return plank_building.position + BUILDING_STOP_OFFSET
+	return Logistics.front_spot(plank_building.position)
 
 func _release_plank_reservation() -> void:
 	if plank_building != null and is_instance_valid(plank_building):

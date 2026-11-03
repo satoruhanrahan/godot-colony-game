@@ -11,6 +11,7 @@ extends Node2D
 #    first."). Colonists and workers ignore tables.
 
 const Items = preload("res://scripts/items.gd")
+const Logistics = preload("res://scripts/logistics.gd")
 const HoverNames = preload("res://scripts/hover_names.gd")
 
 @export var building_type: BuildingType
@@ -55,7 +56,7 @@ func interact_point() -> Vector2:
 	return global_position + Vector2(0, -4)
 
 func hammer_spot_world() -> Vector2:
-	return global_position + Vector2(-22, 0)
+	return Logistics.beside_spot(global_position, Vector2(-22, 0))
 
 # "Table", or "Table (Bucket 3/6)".
 func readout() -> String:

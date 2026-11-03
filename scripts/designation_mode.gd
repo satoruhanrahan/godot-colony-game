@@ -690,7 +690,9 @@ func _prune(list: Array, task_type: StringName) -> int:
 
 # The farm zones are drawn only in the farm mode and while the mouse is over one.
 func _update_farm(vp: Viewport) -> void:
-	var m: Node2D = _plot_manager()
+	# (Looked up, not made: this runs every frame, and on the first frame of a new world its parent is still setting up its children, where add_child() fails.
+	# With no manager there are no zones to draw.)
+	var m: Node2D = get_tree().get_first_node_in_group("plot_manager")
 	var show: bool = m != null and (not m.farm_cells.is_empty() or not _farm_preview.is_empty()) and ((active and type == &"farm") or m.farm_cells.has(m.cell_of(get_global_mouse_position())))
 	if not show:
 		if _farm_drawn:

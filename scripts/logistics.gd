@@ -14,6 +14,26 @@ const STORAGE_STOP_OFFSET: Vector2 = Vector2(0, 16)
 const SAWMILL_STOP_OFFSET: Vector2 = Vector2(0, 27)
 const BUILDING_STOP_OFFSET: Vector2 = Vector2(0, 31)
 
+# The ground a person's feet can be on. A spot of a building that already stands at the edge of the map (new ones cannot be placed there:
+# BuildMode.check_outdoor) moves to the nearest point inside it.
+const WALK_RECT: Rect2 = Rect2(2, 16, 636, 624)
+
+static func inside_map(spot: Vector2) -> Vector2:
+	return spot.clamp(WALK_RECT.position, WALK_RECT.end)
+
+# The place beside a building (`offset` from its origin, the hammer / dig spot): on the other side when this one would be outside the map.
+static func beside_spot(origin: Vector2, offset: Vector2) -> Vector2:
+	var spot: Vector2 = origin + offset
+	if spot.x < WALK_RECT.position.x or spot.x > WALK_RECT.end.x:
+		var other: Vector2 = origin + Vector2(-offset.x, offset.y)
+		if other.x >= WALK_RECT.position.x and other.x <= WALK_RECT.end.x:
+			return other
+	return inside_map(spot)
+
+# Where he stands to hand things to a blueprint outdoors (in front of it).
+static func front_spot(origin: Vector2) -> Vector2:
+	return inside_map(origin + BUILDING_STOP_OFFSET)
+
 static func nearest(nodes: Array, from: Vector2) -> Node2D:
 	var best: Node2D = null
 	var best_d: float = INF
@@ -42,7 +62,7 @@ static func log_destination(tree: SceneTree, from: Vector2, prefer_storage: bool
 		if o[1] != null:
 			var node: Node2D = o[1]
 			var stop: Vector2 = node.interact_point() if o[0] == "pit" else (node.global_position + (STORAGE_STOP_OFFSET if o[0] == "storage" else SAWMILL_STOP_OFFSET))
-			return {"node": node, "kind": o[0], "stop": stop.round()}
+			return {"node": node, "kind": o[0], "stop": inside_map(stop).round()}
 	return {}
 
 # Hands the log to the destination; false if it was refused (it filled up meanwhile).

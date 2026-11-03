@@ -78,6 +78,8 @@ var drag_tree = null
 var stuck_events: int = 0
 var fail_text: String = ""
 var fail_until: float = 0.0
+# The job (instance id; 0 = none) the reason was given on: it goes as soon as he starts a different job, not after its ten seconds.
+var fail_for: int = 0
 var last_report: String = ""
 var report_until: float = 0.0
 # How many times each failure was actually said on the HUD (a failure is said once, then not again for a minute).
@@ -283,7 +285,9 @@ func _sleepy_step(delta: float) -> void:
 		work_job.release()
 		work_job = null
 		waypoints_reset()
-	# 2. what is still in his hands
+	# 2. what is still in his hands (and a tool he had set out to fetch is let go: nothing may keep him from his bed)
+	if work_job == null and tools.reserving() and tools.held == &"":
+		tools.release_reservation()
 	if work_job == null and _sleepy_time < SLEEPY_MAX_SECONDS:
 		if tools.holding():
 			tools.force_return = true
@@ -429,8 +433,28 @@ func is_skipped(node) -> bool:
 func fail(key: String, text: String, say: bool = true) -> void:
 	fail_text = text
 	fail_until = _now() + 10.0
+	fail_for = _activity_id()
 	if say:
 		_say_once(text, key, 60.0)
+
+# The job he is on now (his work job, or the cook's task he assists with): 0 = none.
+func _activity_id() -> int:
+	if work_job != null:
+		return work_job.get_instance_id()
+	if assist_cook != null:
+		return assist_cook.get_instance_id()
+	return 0
+
+# Every frame: a reason ("Nowhere to store it.") that was true for the job he had stays only while that job goes on; a different job clears it.
+func expire_stale_reason() -> void:
+	if fail_text != "" and reason_is_stale():
+		fail_text = ""
+		fail_until = 0.0
+
+# Was the reason given on a job other than the one he is on now? (No job at all: it is still the last thing that went wrong.)
+func reason_is_stale() -> bool:
+	var now_id: int = _activity_id()
+	return now_id != 0 and now_id != fail_for
 
 # A task list is finished: "Done chopping." on the HUD and on his hover line.
 func report(text: String) -> void:
@@ -528,6 +552,9 @@ func free_hands(who, delta: float) -> int:
 	if dragger.is_dragging():
 		dragger.drop()
 	if tools.holding():
+		if tools.return_gave_up:
+			fail("hands_full", "Hands full")
+			return -1
 		return 1 if tools.put_away(who, delta) else 0
 	if not carrying.is_empty():
 		return 1 if drop_carry(false) else -1

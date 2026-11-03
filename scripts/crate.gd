@@ -1,4 +1,5 @@
 extends Node2D
+const Logistics = preload("res://scripts/logistics.gd")
 
 # A crate standing on the floor of a building's interior (built from a "Crate" blueprint: 2 planks, 4 hammer
 # hits). It is solid (it blocks walking at its base), y-sorted with the people, and it holds goods: a
@@ -203,7 +204,7 @@ func footprint_rect() -> Rect2:
 	return Rect2(global_position + Vector2(-16, -32), Vector2(32, 32))
 
 func hammer_spot_world() -> Vector2:
-	return global_position + Vector2(-22, 0)
+	return Logistics.beside_spot(global_position, Vector2(-22, 0))
 
 # The room (BuildingInterior) it stands in.
 func room():

@@ -9,6 +9,7 @@ extends Node2D
 # Dismantling it (Shift+E with the hammer) is blocked while it holds anything.
 
 const FoodConfig = preload("res://scripts/food_config.gd")
+const Logistics = preload("res://scripts/logistics.gd")
 const Items = preload("res://scripts/items.gd")
 const BundleArt = preload("res://scripts/bundle_art.gd")
 
@@ -57,7 +58,7 @@ func interact_point() -> Vector2:
 	return global_position + Vector2(0, -4)
 
 func hammer_spot_world() -> Vector2:
-	return global_position + Vector2(-22, 0)
+	return Logistics.beside_spot(global_position, Vector2(-22, 0))
 
 func holds_anything() -> bool:
 	return has_sheaf or flour_out > 0

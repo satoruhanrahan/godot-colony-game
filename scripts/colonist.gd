@@ -220,6 +220,7 @@ func _process(delta: float) -> void:
 		_schedule_tick()
 	# With a stance he is not "free": every way out of a need or a task lands in IDLE / WALKING / FOLLOWING, and he takes up his order again.
 	order_ai.tools.tick_idle(delta)
+	order_ai.expire_stale_reason()
 	order_ai.debug_tick(delta)
 	# (A colonist with roles or tasks is "ordered" too while there is work for him: try_take_work asks the job board; one holding a tool that
 	# has to go back is ordered until it is back.)
@@ -302,6 +303,7 @@ func _process(delta: float) -> void:
 			pass
 		State.ORDERED:
 			order_ai.tick(delta)
+			order_ai.expire_stale_reason()
 		State.HELPING_CARRY:
 			# (moved by the CarryTogether that owns him)
 			pass
@@ -438,8 +440,9 @@ func _schedule_tick() -> void:
 		_night_rested = false
 	if order_ai.sleepy and not _wants_sleep():
 		order_ai.sleepy = false
-	# (A visitor in a room cannot go to eat or sleep from there: out at the door first.)
-	if state == State.ORDERED and (order_ai.visiting != null or order_ai.inside_room != null) and (_wants_sleep() or hunger.is_hungry() or _starving(clock)):
+	# (A visitor in a room cannot go to eat or sleep from there: out at the door first. Going to bed waits until his hands and his job are let go, the wind-down
+	# for bed finishes what he carries first: put out of the room with the plank in his hands he walked back in with it, and was put out again, for ever.)
+	if state == State.ORDERED and (order_ai.visiting != null or order_ai.inside_room != null) and (hunger.is_hungry() or _starving(clock) or (_wants_sleep() and _ready_for_bed())):
 		order_ai.release_all()
 	match state:
 		State.IDLE, State.WALKING, State.FOLLOWING, State.ORDERED:
@@ -899,7 +902,7 @@ func hover_note() -> String:
 		text += " %s." % ", ".join(role_names)
 	text += " %s." % status_text()
 	var now: float = Time.get_ticks_msec() / 1000.0
-	if order_ai.fail_text != "" and now < order_ai.fail_until:
+	if order_ai.fail_text != "" and now < order_ai.fail_until and not order_ai.reason_is_stale():
 		text += "\n" + order_ai.fail_text
 	elif order_ai.last_report != "" and now < order_ai.report_until:
 		text += "\n" + order_ai.last_report

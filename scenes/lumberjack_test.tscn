@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://qvoyhcxn4nb7" path="res://scripts/lumberjack_move_test.gd" id="3_jyt0f"]
 [ext_resource type="Texture2D" uid="uid://dituh63fomvdy" path="res://sprites/Storage.png" id="7_qgji1"]
 [ext_resource type="SpriteFrames" uid="uid://b8sjqxi2mendw" path="res://sprites/lumberjack_frames.tres" id="8_m0hmt"]
-[ext_resource type="SpriteFrames" uid="uid://cy3tc6hgvf02b" path="res://sprites/hauler_frames.tres" id="8_qgji1"]
+[ext_resource type="SpriteFrames" path="res://sprites/hauler_frames.tres" id="8_qgji1"]
 [ext_resource type="Script" uid="uid://c6ohge0wbk5el" path="res://scripts/hauler.gd" id="9_3vf6q"]
 [ext_resource type="SpriteFrames" path="res://sprites/sawmill_frames.tres" id="10_3vf6q"]
 [ext_resource type="Script" uid="uid://fem13tb4uu2m" path="res://scripts/sawmill.gd" id="11_83lok"]

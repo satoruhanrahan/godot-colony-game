@@ -20,6 +20,7 @@ extends Node2D
 # Dismantling returns the materials (and puts the stone on the ground).
 
 const FoodConfig = preload("res://scripts/food_config.gd")
+const Logistics = preload("res://scripts/logistics.gd")
 const Items = preload("res://scripts/items.gd")
 const WorkFx = preload("res://scripts/work_fx.gd")
 const UNLIT: Texture2D = preload("res://sprites/campfire_unlit.png")
@@ -211,7 +212,7 @@ func interact_point() -> Vector2:
 	return global_position + Vector2(0, -4)
 
 func hammer_spot_world() -> Vector2:
-	return global_position + Vector2(-22, 0)
+	return Logistics.beside_spot(global_position, Vector2(-22, 0))
 
 # --- State ---------------------------------------------------------------------------------------------------
 
